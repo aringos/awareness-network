@@ -16,32 +16,30 @@ dt = 0.001;
 t = 0:dt:100.0;
 pos_end = 10000.0;
 s1 = [100;0;0];
-s2 = [200;200;0];
+s2 = [100;500;0];
 D = s2-s1;
-D_mag = norm(D);
-
 
 dx = pos_end/length(t);
 pos = [0:dx:pos_end-dx;...
        1000*ones(length(t),1)';...
-       500*ones(length(t),1)'];
-vel = [dx/dt*ones(length(t),1)';...
-       zeros(length(t),1)';...
+       0*ones(length(t),1)'];
+vel = [zeros(length(t),1)';...
+       dx/dt*ones(length(t),1)';...
        zeros(length(t),1)'];
    
-f = figure; hold on;
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0 1 1]);
-
-u1 = zeros(length(t),3);
-u2 = u1;
-uDot1 = u1;
-uDot2 = u1;
-estPos = u1;
-estVel = u1;
+zeroVec = zeros(3,length(t));
+u1 = zeroVec;
+u2 = zeroVec;
+uDot1 = zeroVec;
+uDot2 = zeroVec;
+estPos1 = zeroVec;
+estPos2 = zeroVec;
+estVel1 = zeroVec;
+estVel2 = zeroVec;
 for i=1:length(t)
     
-    r1 = pos(:,i)-s1(:,i);
-    r2 = pos(:,i)-s2(:,i);
+    r1 = pos(:,i)-s1;
+    r2 = pos(:,i)-s2;
     u1(:,i) = r1./norm(r1);
     u2(:,i) = r2./norm(r2);
     
@@ -53,25 +51,60 @@ for i=1:length(t)
         uDot2(:,i) = (u2(:,i)-u2(:,i-1))/dt;
     end
     
-    r1est = u1(:,i)*norm(cross(D,u2(:,i)))/norm(cross(u2(:,i),u1(:,i)));
-    r2est = u2(:,i)*norm(cross(D,u1(:,i)))/norm(cross(u1(:,i),u2(:,i)));
-    estPos(:,i) = u1(:,i)+s1;
-end
+    g     = norm(cross(u1(:,i),u2(:,i)));
+    f1    = norm(cross(D,u2(:,i)));
+    f2    = norm(cross(D,u1(:,i)));
+    r1est = u1(:,i)*f1/g;
+    r2est = u2(:,i)*f2/g;
+    estPos1(:,i) = r1est+s1;
+    estPos2(:,i) = r2est+s2;
     
-subplot(4,1,1);hold on;title('Range');grid on;
-plot(t_elapsed, r1_mag, 'r-');
-plot(t_elapsed, r2_mag, 'b-');
-plot(t_elapsed, r1est_mag, 'r--', 'LineWidth', 2);
-plot(t_elapsed, r2est_mag, 'b--', 'LineWidth', 2);
-subplot(4,1,2);hold on; title('RangeRate');grid on;
-plot(t_elapsed, r1dot_mag, 'r-');
-plot(t_elapsed, r2dot_mag, 'b-');
-plot(t_elapsed, r1dot_est, 'r--', 'LineWidth', 2);
-plot(t_elapsed, r2dot_est, 'b--', 'LineWidth', 2);
-subplot(2,1,2);hold on; title('Geometry');grid on;
-scatter(pos(1,i), pos(2,i), 'k.');
-scatter(s1(1,1),s1(2,1), 'rO');
-scatter(s2(1,1),s2(2,1), 'bO');
-plot(r1(1,:), r1(2,:), 'r-');
-plot(r2(1,:), r2(2,:), 'b-');
+    %f1Prime = u1(:,i)*norm(cross(D,uDot2(:,i))) ...
+    %          +uDot1(:,i)*norm(cross(D,u2(:,i)));
+    %f2Prime = u2(:,i)*norm(cross(D,uDot1(:,i))) ...
+    %          +uDot2(:,i)*norm(cross(D,u1(:,i)));
+    %gPrime  = norm(cross(uDot1(:,i),u2(:,i))+cross(u1(:,i),uDot2(:,i)));
+    %estVel1(:,i) = (f1Prime.*g-f1.*gPrime)./g^2;
+    %estVel2(:,i) = (f2Prime.*g-f2.*gPrime)./g^2;
+    f1Prime = norm(cross(D,uDot2(:,i)));
+    gPrime  = norm(cross(uDot1(:,i),u2(:,i))+cross(u1(:,i),uDot2(:,i)));
+    estVel1(:,i) = u1(:,i)*(f1Prime*g-f1*gPrime)/g^2+ ...
+                   uDot1(:,i)*f1/g;
+end
+   
+figure('Units', 'Normalized', 'OuterPosition', [0 0 1 1]); hold on;
+subplot(3,1,1);hold on;title('Relative Position');grid on;
+plot(t, pos(1,:), 'k-');
+plot(t, estPos1(1,:), 'r--');
+plot(t, estPos2(1,:), 'b--');
+legend('Truth','Estimate 1', 'Estimate 2');
+ylabel('North (m)');
+subplot(3,1,2);hold on;grid on;
+plot(t, pos(2,:), 'k-');
+plot(t, estPos1(2,:), 'r--');
+plot(t, estPos2(2,:), 'b--');
+ylabel('East (m)');
+subplot(3,1,3);hold on;grid on;
+plot(t, pos(3,:), 'k-');
+plot(t, estPos1(3,:), 'r--');
+plot(t, estPos2(3,:), 'b--');
+ylabel('Down (m)');
+
+figure('Units', 'Normalized', 'OuterPosition', [0 0 1 1]); hold on;
+subplot(3,1,1);hold on;title('Relative Velocity');grid on;
+plot(t, vel(1,:), 'k-');
+plot(t, estVel1(1,:), 'r--');
+plot(t, estVel2(1,:), 'b--');
+legend('Truth','Estimate 1', 'Estimate 2');
+ylabel('North (m/s)');
+subplot(3,1,2);hold on;grid on;
+plot(t, vel(2,:), 'k-');
+plot(t, estVel1(2,:), 'r--');
+plot(t, estVel2(2,:), 'b--');
+ylabel('East (m/s)');
+subplot(3,1,3);hold on;grid on;
+plot(t, vel(3,:), 'k-');
+plot(t, estVel1(3,:), 'r--');
+plot(t, estVel2(3,:), 'b--');
+ylabel('Down (m/s)');
     

@@ -30,9 +30,9 @@ function [ sensor ] = getSensorModel( modelName, position, az, el, objWidth )
     
     switch modelName
         case 'Delphi_Mid_ESR'
-            sensor.H   = [1;1;1;1];
-            sensor.max = [45*pi/180; 2.25*pi/180; 60; 9999];
-            sensor.R   = [0.5 0 0 0; 0 0.5 0 0; 0 0 0.25 0; 0 0 0 0.12];
+            sensor.H   = [1;1;1];
+            sensor.max = [45*pi/180; 60; 9999];
+            sensor.R   = [0.5*pi/180 0 0; 0 0 0.25; 0 0 0.12];
         case 'Velodyne_VLP16'
             sensor.H   = [1;1;1;0];
             sensor.max = [180*pi/180; 15*pi/180; 100; 0];

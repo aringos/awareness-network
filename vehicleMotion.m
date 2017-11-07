@@ -28,7 +28,7 @@ switch model
     
     % Vehicle cruising at constant speed
     case 'cruise'
-        accelCommands = zeros(3,n);
+        accelCommands = zeros(2,n);
     
     % Car turning N->E onto another city street
     % - Lane width is 3.7m and corner radius is about another 4m, therefore
@@ -43,8 +43,7 @@ switch model
         turningRate      = (pi/2)/turningTime;
         accelCommands    = accelCentripetal.* ...
                                [-sin(turningRate*t).*(t < turningTime); ...
-                                 cos(turningRate*t).*(t < turningTime); ...
-                                 zeros(1,n)];
+                                 cos(turningRate*t).*(t < turningTime)];
     
     % Quadcopter takeoff
     % - Takeoff will have the highest altitude rate change of any typical
@@ -57,11 +56,10 @@ switch model
         altitudeRate  = 25;
         accelTime     = altitudeRate/altitudeAccel;
         accelCommands = [zeros(1,n); ...
-                         zeros(1,n); ...
                          -altitudeAccel*( t < accelTime )];
         
     otherwise
-        accelCommands = zeros(3,n);    
+        accelCommands = zeros(2,n);    
 end
 
 

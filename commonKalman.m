@@ -21,7 +21,6 @@
 % Inputs:  current filtered state (x0=[x,y,vx,vy] or [x1,y1,vx1,vy1,...])
 %          current filtered error (diag(p0)=[xVar,yVar,vxVar,vyVar] or
 %                                           [x1Var,y1Var,vx1Var,vy1Var,...])
-%          sensor type (0=radar or 1=two passive)
 %          sensor2 position rel. sensor1 (d=[x21,y21])
 %          observation vector (z=[meas1,meas2,meas3,...])
 %          observation noise (diag(r)=[var1,var2,var3,...])
@@ -38,7 +37,7 @@
 %
 %--------------------------------------------------------------------------
 
-function [xFilt,pFilt,xExtrap,pExtrap] = commonKalman(x0,p0,sensorType,d,z,r,time)
+function [xFilt,pFilt,xExtrap,pExtrap] = commonKalman(x0,p0,d,z,r,time,update,init)
 
 % Choose best (not near n*pi) gamma, if possible
 % Choose best (not +/-pi/2) elevations, if possible
@@ -47,17 +46,32 @@ function [xFilt,pFilt,xExtrap,pExtrap] = commonKalman(x0,p0,sensorType,d,z,r,tim
 dtPred = time(2)-time(1);
 dtExtrap = time(3)-time(2);
 
+if length(z)==3
+    sensorType = 0;
+else
+    sensorType = 1;
+end
+
 switch sensorType
     
     % Radar sensor
-    case 0        
-        phiPred = radarStateTransitionMatrix(dtPred);
-        qPred = radarProcessNoise(dtPred);
-        [xPred,pPred] = extrapolateEstimate(x0,p0,phiPred,qPred);
-        H = radarMeasurementMatrix(xPred);
-        [zPred,rPred] = predictRadarMeasurement(xPred,pPred,H);
+    case 0
+        if init==1
+            [xFilt,pFilt] = radarInit(z,r);
+            return;
+        end
         
-        [xFilt,pFilt] = filterEstimate(xPred,pPred,z,zPred,r,rPred,H);
+        if update==1
+            phiPred = radarStateTransitionMatrix(dtPred);
+            qPred = radarProcessNoise(dtPred);
+            [xPred,pPred] = extrapolateEstimate(x0,p0,phiPred,qPred);
+            H = radarMeasurementMatrix(xPred);
+            [zPred,rPred] = predictRadarMeasurement(xPred,pPred,H);
+
+            [xFilt,pFilt] = filterEstimate(xPred,pPred,z,zPred,r,rPred,H);
+        else
+            xFilt = x0;  pFilt = p0;
+        end
         
         phiExtrap = radarStateTransitionMatrix(dtExtrap);
         qExtrap = radarProcessNoise(dtExtrap);
@@ -65,13 +79,21 @@ switch sensorType
     
     % Two passive sensors
     case 1
-        phiPred = triangulateStateTransitionMatrix(dtPred);
-        qPred = triangulateProcessNoise(dtPred);
-        [xPred,pPred] = extrapolateEstimate(x0,p0,phiPred,qPred);
-        H = triangulateMeasurementMatrix(xPred);
-        [zPred,rPred] = predictTriangulateMeasurement(xPred,pPred,H);
+        if init==1
+           [xFilt,pFilt] = triangulateInit(z,r,d);
+        end
         
-        [xFilt,pFilt] = filterEstimate(xPred,pPred,z,zPred,r,rPred,H);
+        if update==1
+            phiPred = triangulateStateTransitionMatrix(dtPred);
+            qPred = triangulateProcessNoise(dtPred);
+            [xPred,pPred] = extrapolateEstimate(x0,p0,phiPred,qPred);
+            H = triangulateMeasurementMatrix(xPred);
+            [zPred,rPred] = predictTriangulateMeasurement(xPred,pPred,H);
+
+            [xFilt,pFilt] = filterEstimate(xPred,pPred,z,zPred,r,rPred,H);
+        else
+            xFilt = x0;  pFilt = p0;
+        end
         
         phiExtrap = triangulateStateTransitionMatrix(dtExtrap);
         qExtrap = triangulateProcessNoise(dtExtrap);
@@ -103,6 +125,41 @@ end
 % 
 % Filtering:
 %
+
+end
+
+%--------------------------------------------------------------------------
+% radarInit
+%--------------------------------------------------------------------------
+function [x0,p0] = radarInit(z,r)
+
+    x0(1) = z(2)*cos(z(1));
+    x0(2) = z(2)*sin(z(1));
+    x0(3) = z(3)*cos(z(1))-z(2)*sin(z(1));
+    x0(4) = z(3)*sin(z(1))+z(2)*cos(z(1));
+    
+    J = zeros(4,3);
+    J(1,1) = -z(2)*sin(z(1));
+    J(1,2) = cos(z(1));
+    J(2,1) = z(2)*cos(z(1));
+    J(2,2) = sin(z(1));
+    J(3,1) = -z(3)*sin(z(1))-z(2)*cos(z(1));
+    J(3,2) = -sin(z(1));
+    J(3,3) = cos(z(1));
+    J(4,1) = z(3)*cos(z(1))-z(2)*sin(z(1));
+    J(4,2) = cos(z(1));
+    J(4,3) = sin(z(1));
+    
+    p0 = J*r*J';
+
+end
+
+%--------------------------------------------------------------------------
+% triangulateInit
+%--------------------------------------------------------------------------
+function [x0,p0] = triangulateInit(z,r,d)
+
+
 
 end
 

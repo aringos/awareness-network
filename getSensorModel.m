@@ -15,34 +15,37 @@
 %          objWidth is width of object in meters (used for pixel maxrange)
 %
 % Outputs: Sensor structure for use in producing measurements
+%          H = [az,azDot,range,rDot];
 %--------------------------------------------------------------------------
 
 function [ sensor ] = getSensorModel( modelName, position, az, objWidth )
     nPixelsForDetection = 3;
 
-    sensor.H    = [0;0;0];
-    sensor.max  = [0;0;0];
+    sensor.H    = zeros(4,1);
+    sensor.max  = zeros(4,1);
     sensor.pos  = position;
     sensor.TI2B = [cos(az),sin(az);-sin(az),cos(az)];
     sensor.TB2I = sensor.TI2B';
-    sensor.R    = -1*ones(3,3);
+    sensor.R    = -1*ones(4);
     sensor.dt   = 0;
     
     switch modelName
         case 'Delphi_Mid_ESR'
-            sensor.H   = [1;1;1];
-            sensor.max = [45*pi/180; 60; 9999];
+            sensor.H   = [1;0;1;1];
+            sensor.max = [45*pi/180; 0; 60; 9999];
             sensor.R   = [0.5*pi/180 0 0; 0 0.25 0; 0 0 0.12];
             sensor.dt  = 50e-3;
         case 'Velodyne_VLP16'
-            sensor.H   = [1;1;0];
-            sensor.max = [180*pi/180; 100; 0];
+            sensor.H   = [1;0;1;0];
+            sensor.max = [180*pi/180; 0; 100; 0];
             sensor.R   = [0.05 0 0; 0 0.03 0];
+            %sensor.dt  = ???
         case 'R20A'
-            sensor.H   = [1;0;0];
-            sensor.R   = [0.094*pi/180 0 0; 0 0 0; 0 0 0];
+            sensor.H   = [1;1;0;0];
+            sensor.R   = [0.094*pi/180 0; 0 0.0094*pi/180];
+            sensor.dt  = 1/30;
             pxRange    = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
-            sensor.max = [30*pi/180; pxRange; 0];
+            sensor.max = [30*pi/180; 0.5*30*pi/180/sensor.dt; pxRange; 0];
     end  
     
     %1-sigma to variance

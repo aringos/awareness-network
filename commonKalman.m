@@ -48,8 +48,10 @@ dtExtrap = time(3)-time(2);
 
 if length(z)==3
     sensorType = 0;
-else
+elseif length(z)==4
     sensorType = 1;
+else
+    sensorType = 99;
 end
 
 switch sensorType
@@ -81,14 +83,15 @@ switch sensorType
     case 1
         if init==1
            [xFilt,pFilt] = triangulateInit(z,r,d);
+           return;
         end
         
         if update==1
             phiPred = triangulateStateTransitionMatrix(dtPred);
             qPred = triangulateProcessNoise(dtPred);
             [xPred,pPred] = extrapolateEstimate(x0,p0,phiPred,qPred);
-            H = triangulateMeasurementMatrix(xPred);
-            [zPred,rPred] = predictTriangulateMeasurement(xPred,pPred,H);
+            H = triangulateMeasurementMatrix(xPred,d);
+            [zPred,rPred] = predictTriangulateMeasurement(xPred,pPred,H,d);
 
             [xFilt,pFilt] = filterEstimate(xPred,pPred,z,zPred,r,rPred,H);
         else
@@ -100,31 +103,9 @@ switch sensorType
         [xExtrap,pExtrap] = extrapolateEstimate(xFilt,pFilt,phiExtrap,qExtrap);
         
     otherwise
-        disp('ERROR: commonEkf: Invalid sensorType input');
+        disp('ERROR: commonKalman: Invalid sensorType input');
         return;
 end
-
-% Extended Kalman filter
-%
-% Predicted at measurement:
-% xBar=Phi*x0
-% pBar=Phi*p0*Phi'+Q
-% zBar=H*xBar
-% rBar=H*pBar*H'
-%
-% Filtering:
-% y=z-zBar
-% S=r+rBar
-% K=pBar*H'*S^-1
-% xHat=xBar+K*y
-% pHat=(I-K*H)*pBar
-
-% Unscented Kalman filter
-%
-% Predicted at measurement:
-% 
-% Filtering:
-%
 
 end
 
@@ -133,24 +114,52 @@ end
 %--------------------------------------------------------------------------
 function [x0,p0] = radarInit(z,r)
 
+    azDot0 = 1;
     x0(1) = z(2)*cos(z(1));
     x0(2) = z(2)*sin(z(1));
-    x0(3) = z(3)*cos(z(1))-z(2)*sin(z(1));
-    x0(4) = z(3)*sin(z(1))+z(2)*cos(z(1));
+    x0(3) = z(3)*cos(z(1))-z(2)*sin(z(1))*azDot0;
+    x0(4) = z(3)*sin(z(1))+z(2)*cos(z(1))*azDot0;
     
     J = zeros(4,3);
     J(1,1) = -z(2)*sin(z(1));
     J(1,2) = cos(z(1));
     J(2,1) = z(2)*cos(z(1));
     J(2,2) = sin(z(1));
-    J(3,1) = -z(3)*sin(z(1))-z(2)*cos(z(1));
-    J(3,2) = -sin(z(1));
+    J(3,1) = -z(3)*sin(z(1))-z(2)*cos(z(1))*azDot0;
+    J(3,2) = -sin(z(1))*azDot0;
     J(3,3) = cos(z(1));
-    J(4,1) = z(3)*cos(z(1))-z(2)*sin(z(1));
-    J(4,2) = cos(z(1));
+    J(4,1) = z(3)*cos(z(1))-z(2)*sin(z(1))*azDot0;
+    J(4,2) = cos(z(1))*azDot0;
     J(4,3) = sin(z(1));
     
     p0 = J*r*J';
+
+end
+
+%--------------------------------------------------------------------------
+% triangulateMeasToState
+%--------------------------------------------------------------------------
+function [x] = triangulateMeasToState(z,d)
+
+    u1Xu2 = cos(z(1))*sin(z(3))-sin(z(1))*cos(z(3));
+    rng1 = -(d(1)*sin(z(3))-(d(2)*cos(z(3))))/u1Xu2;
+    rng2 =  (d(1)*sin(z(1))-(d(2)*cos(z(1))))/u1Xu2;
+
+    u1Xu2Dot = sign(u1Xu2)*(-sin(z(1))*z(2)*sin(z(3))+cos(z(1))*cos(z(3))*z(4) ...
+               -cos(z(1))*z(2)*cos(z(3))+sin(z(1))*sin(z(3))*z(4));
+    rng1Dot = sign(rng1)*((-d(1)*cos(z(3))*z(4)-d(2)*sin(z(3))*z(4))*abs(u1Xu2) ...
+               -(-d(1)*sin(z(3))+d(2)*cos(z(3)))*u1Xu2Dot)/u1Xu2^2;
+    rng2Dot = sign(rng2)*((d(1)*cos(z(1))*z(2)+d(2)*sin(z(1))*z(2))*abs(u1Xu2) ...
+               -(d(1)*sin(z(1))-d(2)*cos(z(1)))*u1Xu2Dot)/u1Xu2^2;
+    
+    x(1) = abs(rng1)*cos(z(1));
+    x(2) = abs(rng1)*sin(z(1));
+    x(3) = rng1Dot*cos(z(1))-abs(rng1)*sin(z(1))*z(2);
+    x(4) = rng1Dot*sin(z(1))+abs(rng1)*cos(z(1))*z(2);
+    x(5) = abs(rng2)*cos(z(3));
+    x(6) = abs(rng2)*sin(z(3));
+    x(7) = rng2Dot*cos(z(3))-abs(rng2)*sin(z(3))*z(4);
+    x(8) = rng2Dot*sin(z(3))+abs(rng2)*cos(z(3))*z(4);
 
 end
 
@@ -159,8 +168,19 @@ end
 %--------------------------------------------------------------------------
 function [x0,p0] = triangulateInit(z,r,d)
 
-
-
+    x0 = triangulateMeasToState(z,d);
+    
+    % Use unscented transform to get covariance matrix
+    n = length(z);
+    p0 = zeros(length(x0));
+    W0 = 0;
+    sig = sqrtm(n/(1-W0)*r);
+    for i=1:(2*n)
+        sigPt = sign(i-n+0.01)*sig(:,ceil(i/2));
+        xPt = triangulateMeasToState(z+sigPt,d);
+        p0 = p0+(x0-xPt)*(x0-xPt)';
+    end
+    p0 = p0*(1-W0)/(2*n);
 end
 
 %--------------------------------------------------------------------------
@@ -201,7 +221,8 @@ end
 %--------------------------------------------------------------------------
 function [q] = triangulateProcessNoise(dt)
 
-    q = zeros(8);
+    G = [dt^2/2;dt^2/2;dt;dt;dt^2/2;dt^2/2;dt;dt];
+    q = G*G'*0.01;
 
 end
 
@@ -239,27 +260,27 @@ end
 %--------------------------------------------------------------------------
 % triangulateMeasurementMatrix
 %--------------------------------------------------------------------------
-% function [H] = triangulateMeasurementMatrix(x)
-% 
-%     H = zeros(4,8);
-%     r1 = sqrt(x(1)^2+x(2)^2);  r12 = r1^2;  r14 = r12^2;
-%     r2 = sqrt(x(5)^2+x(6)^2);  r22 = r2^2;  r24 = r22^2;
-%     
-%     H(1,1) = -x(2)/r12;
-%     H(1,2) = x(1)/r12;
-%     H(2,1) = (-x(4)*x(1)^2+2*x(3)*x(1)*x(2)+x(4)*x(2)^2)/r14;
-%     H(2,2) = -(x(3)*x(1)^2+2*x(4)*x(1)*x(2)-x(3)*x(2)^2)/r14;
-%     H(2,3) = H(1,1);
-%     H(2,4) = H(1,2);
-%  
-%     H(3,5) = -x(6)/r22;
-%     H(3,6) = x(5)/r22;
-%     H(4,5) = (-x(8)*x(5)^2+2*x(7)*x(5)*x(6)+x(8)*x(6)^2)/r24;
-%     H(4,6) = -(x(7)*x(5)^2+2*x(8)*x(5)*x(6)-x(7)*x(6)^2)/r24;
-%     H(4,7) = H(3,5);
-%     H(4,8) = H(3,6);
-% 
-% end
+ function [H] = triangulateMeasurementMatrix(x,d)
+ 
+    H = zeros(4,8);
+
+    rho1 = (d(1)+x(1))^2+(d(2)+x(2))^2;
+    rho2 = (d(1)+x(5))^2+(d(2)+x(6))^2;
+    
+    H(1,5) = -(d(2)+x(6))/rho2;
+    H(1,6) =  (d(1)+x(5))/rho2;
+    H(2,5) =  x(8)/rho2-((x(8)*(d(1)+x(5))-x(7)*(d(2)+x(6)))*(2*d(1)+2*x(5)))/rho2^2;
+    H(2,6) = -x(7)/rho2-((x(8)*(d(1)+x(5))-x(7)*(d(2)+x(6)))*(2*d(2)+2*x(6)))/rho2^2;
+    H(2,7) = H(1,5);
+    H(2,8) = H(1,6);
+    H(3,1) = -(d(2)+x(2))/rho1;
+    H(3,2) =  (d(1)+x(1))/rho1;
+    H(4,1) =  x(4)/rho1-((x(4)*(d(1)+x(1))-x(3)*(d(2)+x(2)))*(2*d(1)+2*x(1)))/rho1^2;
+    H(4,2) = -x(3)/rho1-((x(4)*(d(1)+x(1))-x(3)*(d(2)+x(2)))*(2*d(2)+2*x(2)))/rho1^2;
+    H(4,3) = H(3,1);
+    H(4,4) = H(3,2);
+    
+ end
 
 %--------------------------------------------------------------------------
 % predictRadarMeasurement
@@ -278,12 +299,12 @@ end
 %--------------------------------------------------------------------------
 % predictTriangulateMeasurement
 %--------------------------------------------------------------------------
-function [zPred,rPred] = predictTriangulateMeasurement(x,p,H)
+function [zPred,rPred] = predictTriangulateMeasurement(x,p,H,d)
 
-    az1 = atan2(x(2),x(1));
-    az2 = atan2(x(5),x(6));
-    az1Dot = sqrt(x(1)^2+x(2)^2);
-    az2Dot = (x(3)*x(1)+x(4)*x(2))/r;
+    az1 = atan2((x(6)+d(2)),(x(5)+d(1)));
+    az2 = atan2((x(2)+d(2)),(x(1)+d(1)));
+    az1Dot = (x(8)*(x(5)+d(1))-x(7)*(x(6)+d(2)))/((x(5)+d(1))^2+(x(6)+d(2))^2);
+    az2Dot = (x(4)*(x(1)+d(1))-x(3)*(x(2)+d(2)))/((x(1)+d(1))^2+(x(2)+d(2))^2);
 
     zPred = [az1;az1Dot;az2;az2Dot];
     rPred = H*p*H';

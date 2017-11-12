@@ -24,12 +24,13 @@ function [ z, z_truth ] = sensorObservations( sensor, x )
    range  = norm(relPos);
    rDot   = dot(relVel,relPos./range);
    az     = atan2(relPos(2),relPos(1));
+   azDot  = (relPos(1)*relVel(2)-relPos(2)*relVel(1))/range^2;
    
-   obs_truth = [az;range;rDot];
-   z_truth   = obs_truth(sensor.H);
+   obs_truth = [az;azDot;range;rDot];
+   z_truth   = obs_truth(logical(sensor.H));
    
-   obs = obs_truth+randn(3,1).*sqrt(diag(sensor.R));
-   z   = obs(sensor.H);
+   n   = length(z_truth);
+   z = z_truth+randn(n,1).*sqrt(diag(sensor.R));
 
 end
 

@@ -34,11 +34,14 @@ disp(simplify(dAng_dCart,100));
 
 % 2-D Triangulate
 syms az1 az2 az1Dot az2Dot x1 y1 vx1 vy1 x2 y2 vx2 vy2 dx dy;
-
-az1    = atan((y2+dy)/(x2+dx));
-az2    = atan((y1+dy)/(x1+dx));
-az1Dot = (vy2*(x2+dx)-vx2*(y2+dy))/((x2+dx)^2+(y2+dy)^2);
-az2Dot = (vy1*(x1+dx)-vx1*(y1+dy))/((x1+dx)^2+(y1+dy)^2);
+syms sign1 sign2 signD;
+% sign1 = sign(dx*sin(az1)-dy*cos(az1));
+% signD = sign(x1*y2-y1*x2);
+% sign2 = sign(-dx*sin(az2)+dy*cos(az2));
+az1    = atan((signD*y2+sign1*dy)/(signD*x2+sign1*dx));
+az2    = atan((signD*y1+sign2*dy)/(signD*x1+sign2*dx));
+az1Dot = (vy2*(x2+signD*sign1*dx)-vx2*(y2+signD*sign1*dy))/((x2+signD*sign1*dx)^2+(y2+signD*sign1*dy)^2);
+az2Dot = (vy1*(x1+signD*sign2*dx)-vx1*(y1+signD*sign2*dy))/((x1+signD*sign2*dx)^2+(y1+signD*sign2*dy)^2);
 
 dTri_dCart = jacobian([az1,az1Dot,az2,az2Dot],[x1,y1,vx1,vy1,x2,y2,vx2,vy2]);
 disp('Triangulation:');

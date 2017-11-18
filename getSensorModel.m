@@ -19,15 +19,22 @@
 %--------------------------------------------------------------------------
 
 function [ sensor ] = getSensorModel( modelName, position, az, objWidth )
+
+    if (length(position)>2)
+        disp('ERROR: getSensorModel() position vector must be of length 2');
+        return
+    end
+
     nPixelsForDetection = 3;
 
-    sensor.H    = zeros(4,1);
-    sensor.max  = zeros(4,1);
-    sensor.pos  = position;
-    sensor.TI2B = [cos(az),sin(az);-sin(az),cos(az)];
-    sensor.TB2I = sensor.TI2B';
-    sensor.R    = -1*ones(4);
-    sensor.dt   = 0;
+    sensor.H     = zeros(4,1);
+    sensor.max   = zeros(4,1);
+    sensor.pos   = position;
+    sensor.TB2I  = [cos(az),-sin(az);sin(az),cos(az)];
+    sensor.TI2B  = sensor.TB2I';
+    sensor.R     = -1*ones(4);
+    sensor.dt    = 0;
+    sensor.color = rand(3,1).*.7;
     
     switch modelName
         case 'Delphi_Mid_ESR'

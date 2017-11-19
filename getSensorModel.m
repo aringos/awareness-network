@@ -42,10 +42,16 @@ function [ sensor ] = getSensorModel( modelName, position, az, objWidth )
             %sensor.dt  = ???
         case 'R20A'
             sensor.H   = [1;1;0;0];
-            sensor.R   = [0.094*pi/180 0; 0 0.0094*pi/180];
+            sensor.R   = [0.094*pi/180 0; 0 0.094*pi/180];
             sensor.dt  = 1/30;
             pxRange    = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
             sensor.max = [30*pi/180; 0.5*30*pi/180/sensor.dt; pxRange; 0];
+        case 'Raspberry_Pi_Camera'
+            sensor.H   = [1;1;0;0];
+            sensor.R   = [0.06*pi/180 0; 0 0.06*pi/180];
+            sensor.dt  = 1/30;
+            pxRange    = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
+            sensor.max = [62*pi/180; 0.5*62*pi/180/sensor.dt; pxRange; 0];
     end  
     
     %1-sigma to variance

@@ -14,8 +14,9 @@ tend = 5.0;
 t = 0:dt:tend;
 randomSeed = 0;
 
-sensors = [Sensor('R20A', [30;60], 240*pi/180, 2)];
+sensors = [Sensor('Delphi_Mid_ESR', [30;60], 240*pi/180, 2)];
 network = Network('WiFi');
+fusion  = FusionCenter();  
 accel   = vehicleMotion( 'cruise', dt, tend );          
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,11 +47,15 @@ for k=1:length(t)
    %assume that these will all have full rank (angle,range,rangerate)
    refinedObservationList = [];
    for i=1:length(rawObservationList)
-       %Triangulate as necessary
+       if rawObservationList(i).observation_H == [1;0;1;1]
+          refinedObservationList = ...
+              [refinedObservationList rawObservationList(i)]; 
+       end
    end
 
-   %For each filter extrap in queue
-       %If extrap is full rank, update to fusion center
+   %Update Sensor fusion kalman filter
+   %for i=1:length(refinedObservationList)
+   %    fusion = fusion.update(refinedObservationList(i));
     
 end
 

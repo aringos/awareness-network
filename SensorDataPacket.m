@@ -10,6 +10,7 @@ classdef SensorDataPacket
         observation_t             = 0;
         observation_z             = 0;
         observation_P             = 0;
+        observation_H             = [];
     end
     
     methods
@@ -25,6 +26,7 @@ classdef SensorDataPacket
                                  
            [packet.observation_z, packet.observation_P] = ...
                sensor.filter.getExtrapolation(t);
+           packet.observation_H = sensor.H;
         end
     end
     

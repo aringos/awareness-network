@@ -5,9 +5,6 @@ verticesPerSide = 100;
 
 vectorOfFovVertices = {};
 
-figure; grid on; hold on; axis equal;
-title('Sensor placement');
-
 for sensorIdx=1:length(sensors)
     % Build the vertex vector in sensor LOS coordinates 
     % and then rotate to reference frame
@@ -29,7 +26,8 @@ for sensorIdx=1:length(sensors)
     thisVertexVector = [leftFovLine leftRadialLine rightRadialLine rightFovLine];
     %Transform to inertial
     thisVertexVector = origin+sensors(sensorIdx).TB2I*thisVertexVector;
-    plot(thisVertexVector(1,:),thisVertexVector(2,:), 'Color', sensors(sensorIdx).color);
+    
+    vectorOfFovVertices
 end
 
 

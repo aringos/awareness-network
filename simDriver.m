@@ -9,47 +9,46 @@ dt = 0.001;
 tend = 5.0;
 t = 0:dt:tend;
 
-sensors = [getSensorModel('R20A', [200;60], 200*pi/180, 2)];
-sensors = [sensors getSensorModel('R20A', [300;-60], 160*pi/180, 2)];
-sensors = [sensors getSensorModel('R20A', [400;60], 200*pi/180, 2)];
-sensors = [sensors getSensorModel('R20A', [500;-60], 160*pi/180, 2)];
-sensors = [sensors getSensorModel('R20A', [600;60], 200*pi/180, 2)];
+sensors = [Sensor('R20A', [30;60], 240*pi/180, 2)];
 accel  = vehicleMotion( 'cruise', dt, tend );          
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-FOVvertices = drawSensorFOVs(sensors);
+%Get target state for all time t
+x = getStateVector(accel, dt);
 
-%Form the dynamics truth
-x = zeros(9, size(accel,2));
-x(:,1) = [0;0;0;0;0;0;accel(:,1)];
-x(7:9,:) = accel;
-for i=2:size(accel,2)
-   x(:,i) = dynamics(x(:,i-1),dt);
-   x(7:9,i) = accel(:,i);
+%Simulation Loop
+for k=1:length(t)
+   currState = x(:,k);
+    
+   %Update sensors and their trackers
+   for s=1:length(sensors)
+       sensors(s) = sensors(s).update(currState,t(k));
+   end
+       
+   %On communication rate boundary
+       %Loop over sensors
+           %If the sensor's kf is valid add filter extrap to queue
+       %For each filter extrap in queue
+           %If extrap is not full rank, loop over filter extraps again
+           %(starting from this extrap)
+               %If we found two angle-only extraps that arent same sensor,
+                   %Triangulate and add that measurement to queue
+       %For each filter extrap in queue
+           %If extrap is full rank, update to fusion center
+    
 end
 
-%Form observation sets for all sensors
-observations = [];
+
 for s=1:length(sensors)
-   observations = [observations getObservations(sensors(s),x,t,dt)];
+   sensors(s).plotTelemetry(); 
 end
 
-%Fusion algorithm should go here
-%doSomeKindOfFusion();
+figure; hold on; grid on; axis equal;
+plot(x(1,:), x(2,:));
+for i=1:length(sensors)
+   plot(sensors(i).vertices(1,:), sensors(i).vertices(2,:), 'Color', sensors(i).color); 
+end
 
-figure; 
-subplot(3,2,1); hold on; title('Position (x)'); 
-plot(t,x(1,:), 'k--', 'LineWidth', 2);
-subplot(3,2,3); hold on; title('Position (y)'); 
-plot(t,x(2,:), 'k--', 'LineWidth', 2);
-subplot(3,2,5); hold on; title('Position (z)'); 
-plot(t,x(3,:), 'k--', 'LineWidth', 2);
-subplot(3,2,2); hold on; title('Velocity (x)'); 
-plot(t,x(4,:), 'k--', 'LineWidth', 2);
-subplot(3,2,4); hold on; title('Velocity (y)'); 
-plot(t,x(5,:), 'k--', 'LineWidth', 2);
-subplot(3,2,6); hold on; title('Velocity (z)'); 
-plot(t,x(6,:), 'k--', 'LineWidth', 2);

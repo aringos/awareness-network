@@ -1,4 +1,7 @@
 function [ observations ] = getObservations( sensor, x, t, dt )
+
+%State vector: [az azRate range rangeRate]
+
 observations = [];
 modulo = sensor.dt / dt;
 counter = 1;
@@ -12,10 +15,8 @@ for k=1:length(t)
        obs.x = [0.0 0.0 0.0 0.0];
        relState = [x(1,k)-sensor.pos(1,1); ...
                    x(2,k)-sensor.pos(2,1); ...
-                   x(3,k)-sensor.pos(3,1); ...
                    x(4,k); ...
-                   x(5,k); ...
-                   x(6,k) ];
+                   x(5,k)];
        obs.x(1) = tan(relState(3)/norm(relState(1:2)));
        obs.x(2) = tan(relState(2)/relState(1));
        obs.x(3) = norm(relState(1:3));

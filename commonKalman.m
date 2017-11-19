@@ -61,7 +61,8 @@ switch sensorType
     case 0
         if init==1
             [xFilt,pFilt] = radarInit(z,r);
-            xExtrap = xFilt;  pExtrap = pFilt;
+            xExtrap = xFilt; 
+            pExtrap = pFilt;
             return;
         end
         
@@ -73,7 +74,8 @@ switch sensorType
             [zPred,rPred] = predictRadarMeasurement(xPred,pPred,H);
             [xFilt,pFilt] = filterEstimate(xPred,pPred,z,zPred,r,rPred,H);
         else
-            xFilt = x0;  pFilt = p0;
+            xFilt = x0;  
+            pFilt = p0;
         end
         
         phiExtrap = radarStateTransitionMatrix(dtExtrap);

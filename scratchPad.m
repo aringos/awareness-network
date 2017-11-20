@@ -2,7 +2,7 @@ clear all; clc; close all;
 
 mph2mps = unitsratio('m','mi')/3600;
 
-estTri = boolean(0);
+estTri = boolean(1);
 
 % Set up true dynamics
 if ~estTri
@@ -10,7 +10,7 @@ if ~estTri
 else
     dt = 1/1500;
 end
-tend = 5.0;
+tend = 4.0;
 t = 0:dt:tend;
 
 % Simulate dynamics
@@ -23,9 +23,17 @@ for i=2:size(accel,2)
    x(5:6,i) = accel(:,i);
 end
 
+figure('name','True Dynamics'); 
+subplot(3,2,1);plot(t,x(1,:)); title('North (m)');
+subplot(3,2,3);plot(t,x(2,:)); title('East (m)');
+subplot(3,2,5);plot(t,x(3,:)); title('North Velocity (m/s)');
+subplot(3,2,2);plot(t,x(4,:)); title('East Velocity (m/s)');
+subplot(3,2,4);plot(t,x(5,:)); title('North Acceleration (m/s^2)');
+subplot(3,2,6);plot(t,x(6,:)); title('East Acceleration (m/s^2)');
+
 if ~estTri
     % Set up radar estimation
-    pos = [5;50];
+    pos = [10;60];
     sensor = getSensorModel('Delphi_Mid_ESR', pos, 10*pi/180, 2);
     tEst = 0:sensor.dt:tend;
     obs = zeros(3,length(tEst));
@@ -60,29 +68,28 @@ if ~estTri
        end
     end
 
-    figure('name','True Dynamics'); 
-    subplot(3,2,1);plot(t,x(1,:));
-    subplot(3,2,3);plot(t,x(2,:));
-    subplot(3,2,5);plot(t,x(3,:));
-    subplot(3,2,2);plot(t,x(4,:));
-    subplot(3,2,4);plot(t,x(5,:));
-    subplot(3,2,6);plot(t,x(6,:));
-
     figure('name','Radar Observations');
-    subplot(3,1,1);plot(tEst,obs(1,:),tEst,obsTrue(1,:)); title('Az');
-    subplot(3,1,2);plot(tEst,obs(2,:),tEst,obsTrue(2,:)); title('Range');
-    subplot(3,1,3);plot(tEst,obs(3,:),tEst,obsTrue(3,:)); title('Rdot');
+    subplot(3,1,1);plot(tEst,obs(1,:),tEst,obsTrue(1,:)); title('Az (rad)');
+    subplot(3,1,2);plot(tEst,obs(2,:),tEst,obsTrue(2,:)); title('Range (m)');
+    subplot(3,1,3);plot(tEst,obs(3,:),tEst,obsTrue(3,:)); title('Range Rate (m/s)');
 
     figure('name','Radar Relative States');
-    subplot(4,1,1);plot(t,xEst(1,:),t,x(1,:)-ones(1,length(t)).*sensor.pos(1)); title('North');
-    subplot(4,1,2);plot(t,xEst(2,:),t,x(2,:)-ones(1,length(t)).*sensor.pos(2)); title('East');
-    subplot(4,1,3);plot(t,xEst(3,:),t,x(3,:)); title('North Velocity');
-    subplot(4,1,4);plot(t,xEst(4,:),t,x(4,:)); title('East Velocity');
+    subplot(4,1,1);plot(t,xEst(1,:),t,x(1,:)-ones(1,length(t)).*sensor.pos(1)); title('Rel. North (m)');
+    subplot(4,1,2);plot(t,xEst(2,:),t,x(2,:)-ones(1,length(t)).*sensor.pos(2)); title('Rel. East (m)');
+    subplot(4,1,3);plot(t,xEst(3,:),t,x(3,:)); title('North Velocity (m/s)');
+    subplot(4,1,4);plot(t,xEst(4,:),t,x(4,:)); title('East Velocity (m/s)');
+    
+    figure('name','Radar Uncertainty');
+    subplot(4,1,1);plot(t,squeeze(sqrt(pEst(1,1,:)))); title('North Uncertainty (m)');
+    subplot(4,1,2);plot(t,squeeze(sqrt(pEst(2,2,:)))); title('East Uncertainty (m)');
+    subplot(4,1,3);plot(t,squeeze(sqrt(pEst(3,3,:)))); title('North Velocity Uncertainty (m/s)');
+    subplot(4,1,4);plot(t,squeeze(sqrt(pEst(4,4,:)))); title('East Velocity Uncertainty (m/s)');
+    
 else
     % Set up triangulation estimation
-    pos1 = [-10;50]; pos2 = [10;50];
-    sensor1 = getSensorModel('R20A', pos1, 10*pi/180, 2);
-    sensor2 = getSensorModel('R20A', pos2, 10*pi/180, 2);
+    pos1 = [-10;60]; pos2 = [10;60];
+    sensor1 = getSensorModel('Raspberry_Pi_Camera', pos1, 10*pi/180, 2);
+    sensor2 = getSensorModel('Raspberry_Pi_Camera', pos2, 10*pi/180, 2);
     tEst = 0:sensor1.dt:tend;
     d = pos2-pos1;
     obs = zeros(4,length(tEst));
@@ -121,19 +128,29 @@ else
     end
 
     figure('name','Passive Observations');
-    subplot(4,1,1);plot(tEst,obs(1,:),tEst,obsTrue(1,:)); title('Az');
-    subplot(4,1,2);plot(tEst,obs(2,:),tEst,obsTrue(2,:)); title('AzDot');
-    subplot(4,1,3);plot(tEst,obs(3,:),tEst,obsTrue(3,:)); title('Range');
-    subplot(4,1,4);plot(tEst,obs(4,:),tEst,obsTrue(4,:)); title('Rdot');
+    subplot(4,1,1);plot(tEst,obs(1,:),tEst,obsTrue(1,:)); title('Az-1 (rad)');
+    subplot(4,1,2);plot(tEst,obs(2,:),tEst,obsTrue(2,:)); title('Az Rate-1 (rad/s)');
+    subplot(4,1,3);plot(tEst,obs(3,:),tEst,obsTrue(3,:)); title('Az-2 (rad)');
+    subplot(4,1,4);plot(tEst,obs(4,:),tEst,obsTrue(4,:)); title('Az Rate-2 (rad/s)');
 
     figure('name','Triangulate Relative States');
-    subplot(4,2,1);plot(t,xEst(1,:),t,x(1,:)-ones(1,length(t)).*sensor1.pos(1)); title('North-1');
-    subplot(4,2,2);plot(t,xEst(2,:),t,x(2,:)-ones(1,length(t)).*sensor1.pos(2)); title('East-1');
-    subplot(4,2,3);plot(t,xEst(3,:),t,x(3,:)); title('North Velocity-1');
-    subplot(4,2,4);plot(t,xEst(4,:),t,x(4,:)); title('East Velocity-1');
-    subplot(4,2,5);plot(t,xEst(5,:),t,x(1,:)-ones(1,length(t)).*sensor2.pos(1)); title('North-2');
-    subplot(4,2,6);plot(t,xEst(6,:),t,x(2,:)-ones(1,length(t)).*sensor2.pos(2)); title('East-2');
-    subplot(4,2,7);plot(t,xEst(7,:),t,x(3,:)); title('North Velocity-2');
-    subplot(4,2,8);plot(t,xEst(8,:),t,x(4,:)); title('East Velocity-2');
+    subplot(4,2,1);plot(t,xEst(1,:),t,x(1,:)-ones(1,length(t)).*sensor1.pos(1)); title('Rel. North-1 (m)');
+    subplot(4,2,2);plot(t,xEst(2,:),t,x(2,:)-ones(1,length(t)).*sensor1.pos(2)); title('Rel. East-1 (m)');
+    subplot(4,2,3);plot(t,xEst(3,:),t,x(3,:)); title('North Velocity-1 (m/s)');
+    subplot(4,2,4);plot(t,xEst(4,:),t,x(4,:)); title('East Velocity-1 (m/s)');
+    subplot(4,2,5);plot(t,xEst(5,:),t,x(1,:)-ones(1,length(t)).*sensor2.pos(1)); title('Rel. North-2 (m)');
+    subplot(4,2,6);plot(t,xEst(6,:),t,x(2,:)-ones(1,length(t)).*sensor2.pos(2)); title('Rel. East-2 (m)');
+    subplot(4,2,7);plot(t,xEst(7,:),t,x(3,:)); title('North Velocity-2 (m/s)');
+    subplot(4,2,8);plot(t,xEst(8,:),t,x(4,:)); title('East Velocity-2 (m/s)');
+    
+    figure('name','Triangulate Uncertainty');
+    subplot(4,2,1);plot(t,squeeze(sqrt(pEst(1,1,:)))); title('North Uncertainty-1 (m)');
+    subplot(4,2,2);plot(t,squeeze(sqrt(pEst(2,2,:)))); title('East Uncertainty-1 (m)');
+    subplot(4,2,3);plot(t,squeeze(sqrt(pEst(3,3,:)))); title('North Velocity Uncertainty-1 (m/s)');
+    subplot(4,2,4);plot(t,squeeze(sqrt(pEst(4,4,:)))); title('East Velocity Uncertainty-1 (m/s)');
+    subplot(4,2,5);plot(t,squeeze(sqrt(pEst(5,5,:)))); title('North Uncertainty-2 (m)');
+    subplot(4,2,6);plot(t,squeeze(sqrt(pEst(6,6,:)))); title('East Uncertainty-2 (m)');
+    subplot(4,2,7);plot(t,squeeze(sqrt(pEst(7,7,:)))); title('North Velocity Uncertainty-2 (m/s)');
+    subplot(4,2,8);plot(t,squeeze(sqrt(pEst(8,8,:)))); title('East Velocity Uncertainty-2 (m/s)');
 end
 

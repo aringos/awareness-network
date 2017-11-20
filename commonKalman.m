@@ -121,7 +121,7 @@ end
 %--------------------------------------------------------------------------
 function [x0,p0] = radarInit(z,r)
 
-    azDot0 = 0.01;
+    azDot0 = 0.0;
     x0(1) = z(2)*cos(z(1));
     x0(2) = z(2)*sin(z(1));
     x0(3) = z(3)*cos(z(1))-z(2)*sin(z(1))*azDot0;
@@ -149,7 +149,7 @@ end
 function [x] = triangulateMeasurementToState(z,d)
 
     u1Xu2 = cos(z(1))*sin(z(3))-sin(z(1))*cos(z(3));
-    rng1 = -(d(1)*sin(z(3))-(d(2)*cos(z(3))))/abs(u1Xu2);
+    rng1 = -(d(1)*sin(z(3))+(d(2)*cos(z(3))))/abs(u1Xu2);
     rng2 =  (d(1)*sin(z(1))-(d(2)*cos(z(1))))/abs(u1Xu2);
 
     u1Xu2Dot = sign(u1Xu2)*(-sin(z(1))*z(2)*sin(z(3))+cos(z(1))*cos(z(3))*z(4) ...
@@ -180,7 +180,7 @@ function [x0,p0] = triangulate(z,r,d)
     % Use unscented transform to get covariance matrix
     n = length(z);
     p0 = zeros(length(x0));
-    W0 = 0;
+    W0 = -0.25;
     sig = sqrtm(n/(1-W0)*r);
     for i=1:(2*n)
         sigPt = sign(i-n+0.01)*sig(:,ceil(i/2));
@@ -218,7 +218,7 @@ end
 function [q] = radarProcessNoise(dt)
    
     G = [dt^2/2;dt^2/2;dt;dt];
-    q = G*G'*0.5;
+    q = G*G'*0.75;
 
 end
 
@@ -228,7 +228,7 @@ end
 function [q] = triangulateProcessNoise(dt)
 
     G = [dt^2/2;dt;dt^2/2;dt];
-    q = G*G'*0.25;
+    q = G*G'*0.002;
 
 end
 

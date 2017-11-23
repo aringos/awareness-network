@@ -147,10 +147,13 @@ classdef Sensor
                 subAngle = i*halfFov/double(verticesPerSide/2);
                 leftRadialLine = [leftRadialLine; range*cos(subAngle), range*sin(subAngle)];  
             end
-            leftRadialLine = fliplr(leftRadialLine');
-            rightRadialLine = fliplr([leftRadialLine(1,:); -leftRadialLine(2,:)]);
+            leftRadialLine   = fliplr(leftRadialLine');
+            rightRadialLine  = fliplr([leftRadialLine(1,:); -leftRadialLine(2,:)]);
             thisVertexVector = [leftFovLine leftRadialLine rightRadialLine rightFovLine];
-            sensor.vertices = origin+sensor.TB2I*thisVertexVector; 
+            sensor.vertices  = sensor.TB2I*thisVertexVector; 
+            origin           = [origin(1)*ones(1,length(sensor.vertices));...
+                                origin(2)*ones(1,length(sensor.vertices))];
+            sensor.vertices = origin+sensor.vertices;
         end
         
         function plotTelemetry(sensor)

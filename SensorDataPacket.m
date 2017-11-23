@@ -11,6 +11,8 @@ classdef SensorDataPacket
         observation_z             = 0;
         observation_P             = 0;
         observation_H             = [];
+        
+        sensor_pos                = [];
     end
     
     methods
@@ -27,6 +29,16 @@ classdef SensorDataPacket
            [packet.observation_z, packet.observation_P] = ...
                sensor.filter.getExtrapolation(t);
            packet.observation_H = sensor.H;
+           packet.sensor_pos  = sensor.pos;
+        end
+        
+        function packet = convertToRadarObservations(packet)
+            packet.observation_z = [packet.observation_z(1); ...
+                                    packet.observation_z(3); ...
+                                    packet.observation_z(4)];
+            packet.observation_P = [packet.observation_P(1,1); ...
+                                    packet.observation_P(3,3); ...
+                                    packet.observation_P(4,4)];           
         end
     end
     

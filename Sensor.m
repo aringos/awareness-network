@@ -47,9 +47,9 @@ classdef Sensor
                     sensor.H   = [1;0;1;1];
                     sensor.max = [45*pi/180; 0; 60; 9999];
                     sensor.R   = [0.5*pi/180 0 0 0; 
-                                  0 0.25 0 0; 
-                                  0 0 0.12 0;
-                                  0 0 0 0];
+                                  0 0 0 0; 
+                                  0 0 0.25 0;
+                                  0 0 0 0.12];
                     sensor.dt  = 50e-3;
                 case 'Velodyne_VLP16'
                     sensor.P_sizeBits = 32*2*2;
@@ -108,12 +108,17 @@ classdef Sensor
         end
         
         function canSee = canSeeTarget(sensor, x)
-            canSee = 1; %Just assume this is yes for now
+            relPos        = [x(1);x(2)]-sensor.pos;
+            range         = norm(relPos);
+            canSee        = range<sensor.max(3);
+            tgtPosInLOS   = sensor.TI2B*relPos;
+            tgtLosAzimuth = atan2(tgtPosInLOS(2),tgtPosInLOS(1)); 
+            canSee        = canSee && abs(tgtLosAzimuth)<sensor.max(1);
         end
         
         function sensor = getObservations(sensor, x)
-            relPos = sensor.TI2B*([x(1); x(2)]-sensor.pos);
-            relVel = sensor.TI2B*[x(3); x(4)];
+            relPos = ([x(1); x(2)]-sensor.pos);
+            relVel = [x(3); x(4)];
             range  = norm(relPos);
             rDot   = dot(relVel,relPos./range);
             az     = atan2(relPos(2),relPos(1));

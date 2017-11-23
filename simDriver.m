@@ -7,14 +7,19 @@ clear all; clc;
 
 plotGeometry            = 1;
 plotSensorEstimates     = 1;
-plotNetworkPacketDelays = 1;
+plotNetworkPacketDelays = 0;
+plotFusion              = 1;
+plotTrueState           = 1;
 
 dt = 0.001;
-tend = 5.0;
+tend = 20.0;
 t = 0:dt:tend;
 randomSeed = 0;
 
-sensors = [Sensor('Delphi_Mid_ESR', [30;60], 240*pi/180, 2)];
+sensors = [Sensor('Delphi_Mid_ESR', [20;60], 245*pi/180, 2); ...
+           Sensor('Delphi_Mid_ESR', [20;95], 245*pi/180, 2); ...
+           Sensor('Delphi_Mid_ESR', [20;130], 245*pi/180, 2); ...
+           Sensor('Delphi_Mid_ESR', [20;165], 245*pi/180, 2)];
 network = Network('WiFi');
 fusion  = FusionCenter();  
 accel   = vehicleMotion( 'cruise', dt, tend );          
@@ -54,8 +59,9 @@ for k=1:length(t)
    end
 
    %Update Sensor fusion kalman filter
-   %for i=1:length(refinedObservationList)
-   %    fusion = fusion.update(refinedObservationList(i));
+   for i=1:length(refinedObservationList)
+       fusion = fusion.update(refinedObservationList(i));
+   end
     
 end
 
@@ -63,6 +69,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Telemetry stuff
+
+
+if plotTrueState
+   figure;
+   subplot(4,1,1);
+   plot(t, x(1,:)); title('X POS');
+   subplot(4,1,2);
+   plot(t, x(2,:)); title('Y POS');
+   subplot(4,1,3);
+   plot(t, x(3,:)); title('X VEL');
+   subplot(4,1,4);
+   plot(t, x(4,:)); title('Y VEL');
+end
 
 if plotNetworkPacketDelays
     network.plotPacketDelays();
@@ -80,5 +99,7 @@ if plotGeometry
            'Color', sensors(i).color); 
     end
 end
-
+if plotFusion
+    fusion.plotTelemetry();
+end
 

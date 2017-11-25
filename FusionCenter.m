@@ -15,6 +15,13 @@ classdef FusionCenter
     
     methods
         
+        function [x,P] = extrapolate(ekf, t)
+            dt  = t - ekf.t;         
+            phi = [1 dt 0 0; 0 1 0 0; 0 0 1 dt; 0 0 0 1];
+            x   = phi*ekf.x;
+            P   = diag(phi*ekf.P*ekf.P');     
+        end
+        
         function [H,x_pred,z_pred] = getPredictionsForSensor(ekf, sensorPos)
            relPos = [ekf.x(1)-sensorPos(1); ekf.x(3)-sensorPos(2)];
            relVel = [ekf.x(2); ekf.x(4)];
@@ -57,9 +64,15 @@ classdef FusionCenter
                     0     0     dt3/3 dt2/2; ...
                     0     0     dt2/2 dt];
            if strcmp(type,'RADAR')
-               ekf.Q = 5e-2*eye(4,4);
+               ekf.Q =    10*[1 0   0   0; ...
+                             0  1  0   0; ...
+                             0  0  1  1; ...
+                             0  0  1  1];
            elseif strcmp(type,'TRIANGULATED')
-               ekf.Q = 25*eye(4,4);
+               ekf.Q = 15.0*[25 5   0   0; ...
+                        5  40  0   0; ...
+                        0  0  25  5; ...
+                        0  0  5  40];
            end
            
         end

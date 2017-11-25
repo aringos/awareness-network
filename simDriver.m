@@ -6,25 +6,32 @@ clc;
 % where these are passed in (so that we can loop it)
 
 plotGeometry            = 1;
-plotSensorEstimates     = 1;
+plotSensorEstimates     = 0;
 plotNetworkPacketDelays = 0;
 plotFusion              = 1;
-plotTrueState           = 1;
+plotTrueState           = 0;
+plotEstimates           = 1;
 
 dt = 0.001;
 tend = 30.0;
 t = 0:dt:tend;
 randomSeed = 0;
 
-sensors = [Sensor('Raspberry_Pi_Camera', [60;100],  230*pi/180, 2); ...
-           Sensor('Raspberry_Pi_Camera', [-60;200], -50*pi/180, 2);
-           Sensor('Raspberry_Pi_Camera', [60;300], 230*pi/180, 2);
-           Sensor('Raspberry_Pi_Camera', [-60;400], -50*pi/180, 2)];
+sensors = [Sensor('Raspberry_Pi_Camera', [30;50],  235*pi/180, 2); ...
+           Sensor('Raspberry_Pi_Camera', [-30;100], -55*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [30;150], 235*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [-30;200], -55*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [30;250], 235*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [-30;300], -55*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [30;350], 235*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [-30;400], -55*pi/180, 2)];
        
 % sensors = [Sensor('Delphi_Mid_ESR', [20;60], 245*pi/180, 2); ...
 %            Sensor('Delphi_Mid_ESR', [20;95], 245*pi/180, 2); ...
 %            Sensor('Delphi_Mid_ESR', [20;130], 245*pi/180, 2); ...
-%            Sensor('Delphi_Mid_ESR', [20;165], 245*pi/180, 2)];
+%            Sensor('Delphi_Mid_ESR', [20;165], 245*pi/180, 2); ...
+%            Sensor('Delphi_Mid_ESR', [20;200], 245*pi/180, 2); ...
+%            Sensor('Delphi_Mid_ESR', [20;235], 245*pi/180, 2)];
        
 
        
@@ -35,6 +42,8 @@ accel   = vehicleMotion( 'cruise', dt, tend );
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rng(randomSeed);
+x_hist = zeros(4,length(t));
+P_hist = zeros(4,length(t));
 
 %Get target state for all time t
 x = getStateVector(accel, dt);
@@ -84,6 +93,11 @@ for k=1:length(t)
        fusion = fusion.update(refinedObservationList(i));
    end
     
+   if plotEstimates
+      [x_est P_est] = fusion.extrapolate(t(k));
+      x_hist(:,k) = x_est;
+      P_hist(:,k) = P_est;
+   end
 end
 
 
@@ -125,5 +139,29 @@ end
 
 if plotFusion
     fusion.plotTelemetry();
+end
+
+if plotEstimates
+   figure;
+   subplot(4,1,1); hold on; grid on; title('X Position');
+   plot(t, x(1,:), 'g-', 'LineWidth', 2);
+   plot(t, x_hist(1,:), 'k-');
+   plot(t, x_hist(1,:)+sqrt(P_hist(1,:)), 'r--');
+   plot(t, x_hist(1,:)-sqrt(P_hist(1,:)), 'r--');
+   subplot(4,1,2); hold on; grid on; title('X Velocity');
+   plot(t, x(3,:), 'g-', 'LineWidth', 2);
+   plot(t, x_hist(2,:), 'k-');
+   plot(t, x_hist(2,:)+sqrt(P_hist(2,:)), 'r--');
+   plot(t, x_hist(2,:)-sqrt(P_hist(2,:)), 'r--');
+   subplot(4,1,3); hold on; grid on; title('Y Position');
+   plot(t, x(2,:), 'g-', 'LineWidth', 2);
+   plot(t, x_hist(3,:), 'k-');
+   plot(t, x_hist(3,:)+sqrt(P_hist(3,:)), 'r--');
+   plot(t, x_hist(3,:)-sqrt(P_hist(3,:)), 'r--');
+   subplot(4,1,4); hold on; grid on; title('Y Velocity');
+   plot(t, x(4,:), 'g-', 'LineWidth', 2);
+   plot(t, x_hist(4,:), 'k-');
+   plot(t, x_hist(4,:)+sqrt(P_hist(4,:)), 'r--');
+   plot(t, x_hist(4,:)-sqrt(P_hist(4,:)), 'r--');
 end
 

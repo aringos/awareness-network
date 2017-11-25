@@ -24,7 +24,7 @@ classdef Network
             obsList = [];
             for s=1:length(sensors)
                if sensors(s).tracking
-                   obsTime = t;%-sensors(s).dt;
+                   obsTime = t-sensors(s).dt*rand()*0.5;
                    obsList = [obsList SensorDataPacket(sensors(s), obsTime)];
                    network.obsDelay_t = [network.obsDelay_t t];
                    network.obsDelay_hist = [network.obsDelay_hist t-obsTime];

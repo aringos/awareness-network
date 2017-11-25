@@ -17,8 +17,8 @@ function [ obs ] = triangulateObservations(anglePacket1, anglePacket2)
     P1 = triVariance(z1, z2, theta1, theta2, anglePacket1.observation_P, anglePacket2.observation_P);
     P2 = triVariance(z2, z1, theta1, theta2, anglePacket2.observation_P, anglePacket1.observation_P);
     
-    obs = [FusionObservation(z1, P1, tAlign, anglePacket1.sensor_pos); ...
-           FusionObservation(z2, P2, tAlign, anglePacket2.sensor_pos)];
+    obs = [FusionObservation(z1, P1, anglePacket1.observation_t, anglePacket1.sensor_pos); ...
+           FusionObservation(z2, P2, anglePacket2.observation_t, anglePacket2.sensor_pos)];
     obs(1).type = 'TRIANGULATED';
     obs(2).type = 'TRIANGULATED';
 end

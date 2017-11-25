@@ -39,7 +39,7 @@ classdef Sensor
             sensor.TB2I = [cos(az),-sin(az);sin(az),cos(az)];
             sensor.TI2B = sensor.TB2I';  
             sensor.pos  = position;
-            nPixelsForDetection = 32;
+            nPixelsForDetection = 8;
             switch modelName
                 case 'Delphi_Mid_ESR'
                     sensor.P_sizeBits = 32*3*3;
@@ -72,6 +72,24 @@ classdef Sensor
                     sensor.dt  = 1/30;
                     sensor.pxRange = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
                     sensor.max = [30*pi/180; 0.5*30*pi/180/sensor.dt; sensor.pxRange; 0];
+                case 'Raspberry_Pi_Camera'
+                    sensor.H   = [1;1;0;0];
+                    sensor.R   = [0.06*pi/180  0           0 0; ...
+                                  0            0.06*pi/180/2 0 0; ...
+                                  0            0           0 0; ... 
+                                  0            0           0 0];
+                    sensor.dt  = 1/30;
+                    pxRange    = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
+                    sensor.max = [62*pi/180; 1e9; pxRange; 0];
+                case 'TRUTH_CAMERA'
+                    sensor.H   = [1;1;0;0];
+                    sensor.R   = [1e-3  0    0 0; ...
+                                  0     1e-3 0 0; ...
+                                  0     0    0 0; ... 
+                                  0     0    0 0];
+                    sensor.dt  = 1/30;
+                    pxRange    = 600; 
+                    sensor.max = [pi/2; 1e9; pxRange; 0];
             end  
             %1-sigma to variance
             sensor.R                 = sensor.R.^2;
@@ -102,7 +120,7 @@ classdef Sensor
         function sensor = recordTelemetry(sensor, t)
            sensor.t_hist = [sensor.t_hist t];
            sensor.z_truth_hist = [sensor.z_truth_hist sensor.z_truth];
-           [zEst pEst] = sensor.filter.getExtrapolation(t);
+           [zEst, pEst] = sensor.filter.getExtrapolation(t);
            sensor.z_est_hist = [sensor.z_est_hist, zEst];
            sensor.P_diag_hist = [sensor.P_diag_hist diag(pEst)];
         end
@@ -113,7 +131,7 @@ classdef Sensor
             canSee        = range<sensor.max(3);
             tgtPosInLOS   = sensor.TI2B*relPos;
             tgtLosAzimuth = atan2(tgtPosInLOS(2),tgtPosInLOS(1)); 
-            canSee        = canSee && abs(tgtLosAzimuth)<sensor.max(1);
+            canSee        = canSee && abs(tgtLosAzimuth)<(sensor.max(1))/2.0;
         end
         
         function sensor = getObservations(sensor, x)
@@ -124,7 +142,6 @@ classdef Sensor
             az     = atan2(relPos(2),relPos(1));
             azDot  = (relPos(1)*relVel(2)-relPos(2)*relVel(1))/range^2;
             z_truth = [az;azDot;range;rDot];
-            %z_truth   = obs_truth(logical(sensor.H)); 
             n   = length(z_truth);
             z = z_truth+randn(n,1).*sqrt(diag(sensor.R));
             z = z.*sensor.H;
@@ -157,6 +174,9 @@ classdef Sensor
         end
         
         function plotTelemetry(sensor)
+           if length(sensor.t_hist)==0
+              return 
+           end
            figure; 
            subplot(4,1,1); grid on; hold on; title('Azimuth');
            plot(sensor.t_hist, sensor.z_truth_hist(1,:).*180/pi, 'g-');

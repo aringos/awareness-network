@@ -43,22 +43,22 @@ function [ sensor ] = getSensorModel( modelName, position, az, objWidth )
         case 'Delphi_Mid_ESR'
             sensor.H   = [1;0;1;1];
             sensor.max = [45*pi/180; 0; 60; 9999];
-            sensor.R   = [0.5*pi/180 0 0; 0 0.25 0; 0 0 0.12];
+            sensor.R   = diag([0.5*pi/180; 0; 0.25; 0.12]);
             sensor.dt  = 50e-3;
         case 'Velodyne_VLP16'
             sensor.H   = [1;0;1;0];
-            sensor.max = [180*pi/180; 0; 100; 0];
+            sensor.max = diag([180*pi/180; 0; 100; 0]);
             sensor.R   = [0.05 0 0; 0 0.03 0];
             %sensor.dt  = ???
         case 'R20A'
             sensor.H   = [1;1;0;0];
-            sensor.R   = [0.094*pi/180 0; 0 0.094*pi/180];
+            sensor.R   = diag([0.094*pi/180; 0.094*pi/180; 0; 0]);
             sensor.dt  = 1/30;
             pxRange    = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
             sensor.max = [30*pi/180; 0.5*30*pi/180/sensor.dt; pxRange; 0];
         case 'Raspberry_Pi_Camera'
             sensor.H   = [1;1;0;0];
-            sensor.R   = [0.06*pi/180 0; 0 0.06*pi/180];
+            sensor.R   = diag([0.06*pi/180; 0.06*pi/180; 0; 0]);
             sensor.dt  = 1/30;
             pxRange    = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
             sensor.max = [62*pi/180; 0.5*62*pi/180/sensor.dt; pxRange; 0];

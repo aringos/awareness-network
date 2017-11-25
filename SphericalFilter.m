@@ -8,10 +8,7 @@ classdef SphericalFilter
         P             = zeros(3,3);
         t             = -1.0;
         phi           = zeros(4,4);
-        Q             = [1e-2 0 0 0; ...
-                         0 1e-2 0 0; ...
-                         0 0 1e-2 0; ...
-                         0 0 0 1e-2];
+        Q             = eye(4,4);
         H             = eye(4,4);
         measH         = zeros(4,1);
         trap_azRate   = 0; 
@@ -24,9 +21,9 @@ classdef SphericalFilter
     
     methods
         function filter = initialize(filter, z, R, H, t)
-            filter.t = t;
-            filter.x = z;
-            filter.P = R;
+            filter.t     = t;
+            filter.x     = z;
+            filter.P     = R;
             filter.measH = H;
             filter = filter.recordTelemetry(z,[0;0;0;0],t);
         end
@@ -35,19 +32,34 @@ classdef SphericalFilter
             dt     = t - filter.t;         
             filter.phi = [1 dt 0 0; 0 1 0 0; 0 0 1 dt; 0 0 0 1];
             z      = filter.phi*filter.x;
-            P      = filter.phi*filter.P*filter.P'+filter.Q;            
+            P      = filter.phi*filter.P*filter.P'+filter.Q; 
+        end
+        
+        function filter = setQ(filter, dt)
+           if filter.measH==[1;0;1;1]
+              filter.Q = [5e-3 0 0 0; ...
+                          0 1e-3 0 0; ...
+                          0 0 1e-2 0; ...
+                          0 0 0 1e-2];                 
+           elseif filter.measH==[1;1;0;0]
+              filter.Q = [5e-5 0 0 0; ...
+                          0 5e-6 0 0; ...
+                          0 0 5e-5 0; ...
+                          0 0 0 5e-5];               
+           end
         end
         
         function filter = update(filter, z, R, t)
             dt = t - filter.t;     
-            filter.phi = [1 dt 0 0; 0 1 0 0; 0 0 1 dt; 0 0 0 1];
+            filter      = filter.setQ(dt);     
+            filter.phi  = [1 dt 0 0; 0 1 0 0; 0 0 1 dt; 0 0 0 1];
             x_predicted = filter.phi*filter.x;
             P_predicted = filter.phi*filter.P*filter.P'+filter.Q;
             residual    = z - filter.H*x_predicted;
             innovation  = R + filter.H*P_predicted*filter.H';
-            kalmanGain  = P_predicted*filter.H'*inv(innovation);
-            filter.x    = x_predicted + kalmanGain*residual;
-            filter.P    = P_predicted - kalmanGain*innovation*kalmanGain';
+            K           = P_predicted*filter.H'*inv(innovation);
+            filter.x    = x_predicted + K*residual;
+            filter.P    = P_predicted - K*innovation*K';
             filter = filter.recordTelemetry(z,residual,t);
             filter.t = t;
         end
@@ -57,10 +69,7 @@ classdef SphericalFilter
             filter.z_hist        = [filter.z_hist z];
             filter.residual_hist = [filter.residual_hist residual];
             filter.t_hist        = [filter.t_hist t];
-            filter.P_diag_hist = [filter.P(1,1);...
-                                  filter.P(2,2);...
-                                  filter.P(3,3);
-                                  filter.P(4,4)];            
+            filter.P_diag_hist   = [filter.P_diag_hist diag(filter.P)];            
         end
         
         function plotTelemetry(filter)

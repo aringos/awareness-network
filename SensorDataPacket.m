@@ -16,6 +16,7 @@ classdef SensorDataPacket
     end
     
     methods
+        
         function packet = SensorDataPacket(sensor, t)
            packet.observation_t     = t; 
            packet.totalDataSizeBits = sensor.P_sizeBits + ...

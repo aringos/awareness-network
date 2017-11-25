@@ -12,14 +12,22 @@ plotFusion              = 1;
 plotTrueState           = 1;
 
 dt = 0.001;
-tend = 20.0;
+tend = 30.0;
 t = 0:dt:tend;
 randomSeed = 0;
 
-sensors = [Sensor('Delphi_Mid_ESR', [20;60], 245*pi/180, 2); ...
-           Sensor('Delphi_Mid_ESR', [20;95], 245*pi/180, 2); ...
-           Sensor('Delphi_Mid_ESR', [20;130], 245*pi/180, 2); ...
-           Sensor('Delphi_Mid_ESR', [20;165], 245*pi/180, 2)];
+sensors = [Sensor('Raspberry_Pi_Camera', [60;100],  230*pi/180, 2); ...
+           Sensor('Raspberry_Pi_Camera', [-60;200], -50*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [60;300], 230*pi/180, 2);
+           Sensor('Raspberry_Pi_Camera', [-60;400], -50*pi/180, 2)];
+       
+% sensors = [Sensor('Delphi_Mid_ESR', [20;60], 245*pi/180, 2); ...
+%            Sensor('Delphi_Mid_ESR', [20;95], 245*pi/180, 2); ...
+%            Sensor('Delphi_Mid_ESR', [20;130], 245*pi/180, 2); ...
+%            Sensor('Delphi_Mid_ESR', [20;165], 245*pi/180, 2)];
+       
+
+       
 network = Network('WiFi');
 fusion  = FusionCenter();  
 accel   = vehicleMotion( 'cruise', dt, tend );          
@@ -53,8 +61,21 @@ for k=1:length(t)
    refinedObservationList = [];
    for i=1:length(rawObservationList)
        if rawObservationList(i).observation_H == [1;0;1;1]
-          refinedObservationList = ...
-              [refinedObservationList rawObservationList(i)]; 
+          observation = FusionObservation( ...
+                            rawObservationList(i).observation_z, ...
+                            rawObservationList(i).observation_P, ...
+                            rawObservationList(i).observation_t, ...
+                            rawObservationList(i).sensor_pos);
+          observation.type = 'RADAR';
+          refinedObservationList = [refinedObservationList observation]; 
+       elseif rawObservationList(i).observation_H == [1;1;0;0]
+           for j=i+1:length(rawObservationList)
+               if rawObservationList(i).observation_H == [1;1;0;0]
+                  refinedObservationList = [refinedObservationList ...
+                      triangulateObservations(rawObservationList(i), ...
+                          rawObservationList(j))];
+               end
+           end
        end
    end
 
@@ -86,11 +107,13 @@ end
 if plotNetworkPacketDelays
     network.plotPacketDelays();
 end
+
 if plotSensorEstimates
     for s=1:length(sensors)
        sensors(s).plotTelemetry(); 
     end
 end
+
 if plotGeometry
     figure; hold on; grid on; axis equal;
     plot(x(1,:), x(2,:));
@@ -99,6 +122,7 @@ if plotGeometry
            'Color', sensors(i).color); 
     end
 end
+
 if plotFusion
     fusion.plotTelemetry();
 end

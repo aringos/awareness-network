@@ -13,7 +13,7 @@ plotTrueState           = 0;
 plotEstimates           = 1;
 
 dt = 0.001;
-tend = 65.0;
+tend = 65.0; %A block in midtown Tucson is about 600m long
 t = 0:dt:tend;
 randomSeed = 0;
 

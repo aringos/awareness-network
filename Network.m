@@ -34,7 +34,7 @@ classdef Network
                     network.communicationRatebps     = 256e3;
                     network.communicationRangeMeters = 90;
                     network.costPerUnit              = 32.0;
-                    network.powerDrawPerUnit_mA      = 0.234;
+                    network.powerDrawPerUnit_W       = 0.234;
             end
         end
         

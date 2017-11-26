@@ -10,6 +10,7 @@ plotSensorEstimates     = 0;
 plotNetworkPacketDelays = 0;
 plotFusion              = 0;
 plotTrueState           = 0;
+plotEstimateResiduals   = 1;
 plotEstimates           = 1;
 
 dt = 0.001;
@@ -36,6 +37,9 @@ sensors = [Sensor('Raspberry_Pi_Camera_1080p30', [30;100],  235*pi/180); ...
 network = Network('LoRa_RN2483A');
 hardware = Hardware('Pi_3');
 fusion  = FusionCenter();  
+
+%TODO We really should put some simulated lane/speed changes in here
+%     to test tracking robustness without tough maneuvers
 accel   = vehicleMotion( 'cruise', dt, tend );          
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -129,6 +133,7 @@ end
 
 if plotGeometry
     figure; hold on; grid on; axis equal;
+    title('Scenario Geometry');
     plot(x(1,:), x(2,:), 'k-', 'LineWidth', 2);
     for i=1:length(sensors)
        plot(sensors(i).vertices(1,:), sensors(i).vertices(2,:), ...
@@ -162,5 +167,9 @@ if plotEstimates
    plot(t, x_hist(4,:), 'k-');
    plot(t, x_hist(4,:)+sqrt(P_hist(4,:)), 'r--');
    plot(t, x_hist(4,:)-sqrt(P_hist(4,:)), 'r--');
+end
+
+if plotEstimateResiduals
+   metricEstimate.plotResiduals(t); 
 end
 

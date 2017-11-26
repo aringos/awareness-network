@@ -55,8 +55,14 @@ classdef CostPerformanceEstimate
             xvel_err            = x_hist(2,:)-x(3,:);
             yvel_err            = x_hist(4,:)-x(4,:);
             est.x_residuals     = [xpos_err; xvel_err; ypos_err; yvel_err];
-            est.x_errorMean     = mean(abs(est.x_residuals));
-            est.x_errorStdev    = std(est.x_residuals);
+            est.x_errorMean     = [mean(abs(est.x_residuals(1,:)));
+                                   mean(abs(est.x_residuals(2,:)));
+                                   mean(abs(est.x_residuals(3,:)));
+                                   mean(abs(est.x_residuals(4,:)))];
+            est.x_errorStdev    = [std(est.x_residuals(1,:));
+                                   std(est.x_residuals(2,:));
+                                   std(est.x_residuals(3,:));
+                                   std(est.x_residuals(4,:))];
         end
         
         function est = calcNetworkDistance(est, sensors, network)
@@ -81,7 +87,8 @@ classdef CostPerformanceEstimate
             totalDisplacementMeters = norm([x(1,end)-x(1,1); x(2,end)-x(2,1)]);
             costPerUnit             = sensors(1).costPerUnit + ...
                                       network.costPerUnit + ...
-                                      hardware.costPerUnit;
+                                      hardware.costPerUnit + ...
+                                      hardware.miscCosts;
             fprintf('Estimated total cost per unit: %.2f\n', costPerUnit);
             est.costPerMeter = costPerUnit*length(sensors)/totalDisplacementMeters;
             est.costPerMile  = est.costPerMeter*1609.34;
@@ -92,6 +99,34 @@ classdef CostPerformanceEstimate
             est.wattsPerMeter = wattsPerUnit*length(sensors)/totalDisplacementMeters;
             est.wattsPerMile = est.wattsPerMeter*1609.34;
             fprintf('Power/distance: %.2f W/meter, %.2f W/mile\n', est.wattsPerMeter, est.wattsPerMile);
+        end
+        
+        function plotResiduals(est, t)
+           figure;
+           subplot(4,1,1); hold on; grid on; title('X Position Estimate Error');
+           p1 = plot(t, abs(est.x_residuals(1,:)), 'k-');
+           p2 = plot(t, est.x_errorMean(1)*ones(size(t)), 'b--');
+           p3 = plot(t, est.x_errorStdev(1)*ones(size(t)), 'r--');
+           legend([p1, p2, p3], 'Estimate error', 'Error Mean', 'Error stdev');
+           axis([-inf inf 0 2.0*est.x_errorStdev(1)]);
+           subplot(4,1,2); hold on; grid on; title('X Velocity Estimate Error');
+           p1 = plot(t, abs(est.x_residuals(2,:)), 'k-');
+           p2 = plot(t, est.x_errorMean(2)*ones(size(t)), 'b--');
+           p3 = plot(t, est.x_errorStdev(2)*ones(size(t)), 'r--');
+           legend([p1, p2, p3], 'Estimate error', 'Error Mean', 'Error stdev');
+           axis([-inf inf 0 2.0*est.x_errorStdev(2)]);
+           subplot(4,1,3); hold on; grid on; title('Y Position Estimate Error');
+           p1 = plot(t, abs(est.x_residuals(3,:)), 'k-');
+           p2 = plot(t, est.x_errorMean(3)*ones(size(t)), 'b--');
+           p3 = plot(t, est.x_errorStdev(3)*ones(size(t)), 'r--');
+           legend([p1, p2, p3], 'Estimate error', 'Error Mean', 'Error stdev');
+           axis([-inf inf 0 2.0*est.x_errorStdev(3)]);
+           subplot(4,1,4); hold on; grid on; title('Y Velocity Estimate Error');
+           p1 = plot(t, abs(est.x_residuals(4,:)), 'k-');
+           p2 = plot(t, est.x_errorMean(4)*ones(size(t)), 'b--');
+           p3 = plot(t, est.x_errorStdev(4)*ones(size(t)), 'r--');
+           legend([p1, p2, p3], 'Estimate error', 'Error Mean', 'Error stdev');
+           axis([-inf inf 0 2.0*est.x_errorStdev(4)]);
         end
         
         function est = CostPerformanceEstimate(x, x_hist, sensors, network, hardware)

@@ -80,17 +80,6 @@ classdef Sensor
                                    0 0 0 0];
                     sensor.costPerUnit = 8000.0; 
                     sensor.powerDrawPerUnit_W = 8;
-                case 'R20A'
-                    sensor.P_sizeBits = 32*2*2;
-                    sensor.z_sizeBits = 32*2;
-                    sensor.H   = [1;1;0;0];
-                    sensor.R   = [0.094*pi/180 0 0 0; ...
-                                  0 0.0094*pi/180 0 0; ...
-                                  0 0 0 0; ...
-                                  0 0 0 0];
-                    sensor.dt  = 1/30;
-                    sensor.pxRange = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
-                    sensor.max = [30*pi/180; 0.5*30*pi/180/sensor.dt; sensor.pxRange; 0];
                 case 'Arducam_OV7670'
                     sensor.P_sizeBits = 32*2*2;
                     sensor.z_sizeBits = 32*2;

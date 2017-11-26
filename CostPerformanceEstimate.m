@@ -7,6 +7,9 @@ classdef CostPerformanceEstimate
         x_errorStdev      = 0;
         networkDistMeters = 0;
         costPerMeter      = 0;
+        costPerMile       = 0;
+        wattsPerMeter      = 0;
+        wattsPerMile       = 0;
         adjacencies       = [];
     end
     
@@ -70,13 +73,32 @@ classdef CostPerformanceEstimate
             disp(sprintf('Network data rate supports %d sensor hops at full rate', numSensorsSupported));
             rangeCommunicationLimited = network.communicationRangeMeters * numSensorsSupported;
             est.networkDistMeters   = minDist * numSensorsSupported;
-            fprintf('This network supports %f linear meters of observability', est.networkDistMeters);
+            fprintf('This network supports %f linear meters of observability.\n', est.networkDistMeters);
         end
         
-        function est = CostPerformanceEstimate(x, x_hist, sensors, network)
+        function est = calcCosts(est, x, sensors, network, hardware)
+            disp('Note: Cost calculations are assuming entire trajectory is observed!');
+            totalDisplacementMeters = norm([x(1,end)-x(1,1); x(2,end)-x(2,1)]);
+            costPerUnit             = sensors(1).costPerUnit + ...
+                                      network.costPerUnit + ...
+                                      hardware.costPerUnit;
+            fprintf('Estimated total cost per unit: %.2f\n', costPerUnit);
+            est.costPerMeter = costPerUnit*length(sensors)/totalDisplacementMeters;
+            est.costPerMile  = est.costPerMeter*1609.34;
+            fprintf('Cost/distance: %.2f $/meter, %.2f $/mile\n', est.costPerMeter, est.costPerMile);
+            wattsPerUnit = sensors(1).powerDrawPerUnit_W + ...
+                           network.powerDrawPerUnit_W + ...
+                           hardware.powerDrawPerUnit_W;
+            est.wattsPerMeter = wattsPerUnit*length(sensors)/totalDisplacementMeters;
+            est.wattsPerMile = est.wattsPerMeter*1609.34;
+            fprintf('Power/distance: %.2f W/meter, %.2f W/mile\n', est.wattsPerMeter, est.wattsPerMile);
+        end
+        
+        function est = CostPerformanceEstimate(x, x_hist, sensors, network, hardware)
             est = est.validate(sensors, network);
             est = est.calcErrors(x, x_hist);
             est = est.calcNetworkDistance(sensors, network);
+            est = est.calcCosts(x, sensors, network, hardware);
         end
     end
     

@@ -17,7 +17,8 @@ classdef Sensor
         lastObservationTime = -10.0;  
         vertices = [];
         pxRange  = 100;
-        cost     = 0;
+        costPerUnit     = 0;
+        powerDrawPerUnit_W = 0.0;
         
         %Data packet definition
         P_sizeBits           = 0;
@@ -38,23 +39,36 @@ classdef Sensor
     
     methods
 
-        function sensor = Sensor(modelName, position, az, objWidth)
+        function sensor = Sensor(modelName, position, az)
             sensor.TB2I = [cos(az),-sin(az);sin(az),cos(az)];
             sensor.TI2B = sensor.TB2I';  
             sensor.pos  = position;
-            nPixelsForDetection = 8;
+            minDetWidthPixels = 5;
             switch modelName
                 case 'Delphi_Mid_ESR'
                     sensor.P_sizeBits = 32*3*3;
                     sensor.z_sizeBits = 32*3;
                     sensor.H    = [1;0;1;1];
-                    sensor.max  = [45*pi/180; 0; 60; 9999];
+                    sensor.max  = [90*pi/180; 0; 60; 9999];
                     sensor.R    = [0.5*pi/180 0 0 0; 
                                   0 0 0 0; 
                                   0 0 0.25 0;
                                   0 0 0 0.12];
                     sensor.dt   = 50e-3;
-                    sensor.cost = 3600.0; 
+                    sensor.costPerUnit = 2500.0; 
+                    sensor.powerDrawPerUnit_W = 18; 
+                case 'Delphi_Long_ESR'
+                    sensor.P_sizeBits = 32*3*3;
+                    sensor.z_sizeBits = 32*3;
+                    sensor.H    = [1;0;1;1];
+                    sensor.max  = [20*pi/180; 0; 174; 9999];
+                    sensor.R    = [0.5*pi/180 0 0 0; 
+                                  0 0 0 0; 
+                                  0 0 0.5 0;
+                                  0 0 0 0.12];
+                    sensor.dt   = 50e-3;
+                    sensor.costPerUnit = 2500.0; 
+                    sensor.powerDrawPerUnit_W = 18;
                 case 'Velodyne_VLP16'
                     sensor.P_sizeBits = 32*2*2;
                     sensor.z_sizeBits = 32*2;
@@ -64,8 +78,8 @@ classdef Sensor
                                    0 0 0 0; ...
                                    0 0 0.03 0; ...
                                    0 0 0 0];
-                    sensor.cost = 8000.0; 
-                    %sensor.dt  = ???
+                    sensor.costPerUnit = 8000.0; 
+                    sensor.powerDrawPerUnit_W = 8;
                 case 'R20A'
                     sensor.P_sizeBits = 32*2*2;
                     sensor.z_sizeBits = 32*2;
@@ -77,24 +91,81 @@ classdef Sensor
                     sensor.dt  = 1/30;
                     sensor.pxRange = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
                     sensor.max = [30*pi/180; 0.5*30*pi/180/sensor.dt; sensor.pxRange; 0];
-                case 'Raspberry_Pi_Camera'
-                    sensor.H   = [1;1;0;0];
-                    sensor.R   = [0.06*pi/180  0           0 0; ...
-                                  0            0.06*pi/180/2 0 0; ...
-                                  0            0           0 0; ... 
-                                  0            0           0 0];
-                    sensor.dt  = 1/30;
-                    pxRange    = objWidth/(2*atan(sensor.R(1,1)*nPixelsForDetection/2)); 
-                    sensor.max = [62*pi/180; 1e9; pxRange; 0];
-                case 'TRUTH_CAMERA'
-                    sensor.H   = [1;1;0;0];
-                    sensor.R   = [1e-3  0    0 0; ...
-                                  0     1e-3 0 0; ...
-                                  0     0    0 0; ... 
-                                  0     0    0 0];
-                    sensor.dt  = 1/30;
-                    pxRange    = 600; 
-                    sensor.max = [pi/2; 1e9; pxRange; 0];
+                case 'Arducam_OV7670'
+                    sensor.P_sizeBits = 32*2*2;
+                    sensor.z_sizeBits = 32*2;
+                    sensor.H    = [1;1;0;0];
+                    FOV         = 25.0*pi/180;
+                    iFOV        = FOV/640.0;
+                    sensor.R    = [iFOV  0    0 0; ...
+                                  0      iFOV 0 0; ...
+                                  0      0    0 0; ... 
+                                  0      0    0 0];
+                    sensor.dt   = 1.0/30.0;
+                    pxRange     = 1.2/(2*minDetWidthPixels*tan(iFOV));
+                    sensor.max  = [FOV; 1e9; pxRange; 0];
+                    sensor.costPerUnit = 14.0;
+                    sensor.powerDrawPerUnit_W = 1.3;
+                case 'Arducam_OV5647'
+                    sensor.P_sizeBits = 32*2*2;
+                    sensor.z_sizeBits = 32*2;
+                    sensor.H    = [1;1;0;0];
+                    FOV         = 54.0*pi/180;
+                    iFOV        = FOV/1920.0;
+                    sensor.R    = [iFOV  0    0 0; ...
+                                  0      iFOV 0 0; ...
+                                  0      0    0 0; ... 
+                                  0      0    0 0];
+                    sensor.dt   = 1.0/30.0;
+                    pxRange     = 1.2/(2*minDetWidthPixels*tan(iFOV));
+                    sensor.max  = [FOV; 1e9; pxRange; 0];
+                    sensor.costPerUnit = 15.0;      
+                    sensor.powerDrawPerUnit_W = 1.3;
+                case 'Raspberry_Pi_Camera_1080p30'
+                    sensor.P_sizeBits = 32*2*2;
+                    sensor.z_sizeBits = 32*2;
+                    sensor.H    = [1;1;0;0];
+                    FOV         = 62.0*pi/180;
+                    iFOV        = FOV/1920.0;
+                    sensor.R    = [iFOV  0    0 0; ...
+                                  0      iFOV 0 0; ...
+                                  0      0    0 0; ... 
+                                  0      0    0 0];
+                    sensor.dt   = 1.0/30.0;
+                    pxRange     = 1.2/(2*minDetWidthPixels*tan(iFOV));
+                    sensor.max  = [FOV; 1e9; pxRange; 0];
+                    sensor.costPerUnit = 25.0;
+                    sensor.powerDrawPerUnit_W = 1.3;
+                case 'Raspberry_Pi_Camera_720p60'
+                    sensor.P_sizeBits = 32*2*2;
+                    sensor.z_sizeBits = 32*2;
+                    sensor.H    = [1;1;0;0];
+                    FOV         = 62.0*pi/180;
+                    iFOV        = FOV/1280.0;
+                    sensor.R    = [iFOV  0      0 0; ...
+                                  0      iFOV/2 0 0; ...
+                                  0      0      0 0; ... 
+                                  0      0      0 0];
+                    sensor.dt   = 1.0/30.0; %Actual 1/60, SP limited (better thetadot though)
+                    pxRange     = 1.2/(2*minDetWidthPixels*tan(iFOV));
+                    sensor.max  = [FOV; 1e9; pxRange; 0];
+                    sensor.costPerUnit = 25.0;
+                    sensor.powerDrawPerUnit_W = 1.3;
+                case 'Pi_12mmM12'
+                    sensor.P_sizeBits = 32*2*2;
+                    sensor.z_sizeBits = 32*2;
+                    sensor.H    = [1;1;0;0];
+                    FOV         = 28.0*pi/180;
+                    iFOV        = FOV/1920.0;
+                    sensor.R    = [iFOV  0    0 0; ...
+                                  0      iFOV 0 0; ...
+                                  0      0    0 0; ... 
+                                  0      0    0 0];
+                    sensor.dt   = 1.0/30.0;
+                    pxRange     = 1.2/(2*minDetWidthPixels*tan(iFOV));
+                    sensor.max  = [FOV; 1e9; pxRange; 0];
+                    sensor.costPerUnit = 25.0+10.0+10.0;  
+                    sensor.powerDrawPerUnit_W = 1.3;
             end  
             %1-sigma to variance
             sensor.R                 = sensor.R.^2;
@@ -176,6 +247,7 @@ classdef Sensor
             origin           = [origin(1)*ones(1,length(sensor.vertices));...
                                 origin(2)*ones(1,length(sensor.vertices))];
             sensor.vertices = origin+sensor.vertices;
+            sensor.color    = rand(3,1).*.7;
         end
         
         function plotTelemetry(sensor)

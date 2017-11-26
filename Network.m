@@ -7,24 +7,34 @@ classdef Network
         packetDt                 = 0.03;
         obsDelay_t               = [];
         obsDelay_hist            = [];
+        costPerUnit              = 0;
+        powerDrawPerUnit_W       = 0;
     end
     
     methods
         
         function network = Network(protocolName)
             switch(protocolName)
-                case 'WiFi'
+                case 'WiFi_Onboard'
                     network.communicationRatebps     = 1e6;
                     network.communicationRangeMeters = 50;
-                case 'LoRa'
+                    network.costPerUnit              = 0.0;
+                    network.powerDrawPerUnit_W       = 1.5; 
+                case 'LoRa_RN2483A'
                     network.communicationRatebps     = 300e3;
                     network.communicationRangeMeters = 5000;
+                    network.costPerUnit              = 20.0;
+                    network.powerDrawPerUnit_W       = 0.2; 
                 case 'Zigbee_LowPower'
                     network.communicationRatebps     = 256e3;
                     network.communicationRangeMeters = 60;
+                    network.costPerUnit              = 18.0;
+                    network.powerDrawPerUnit_W       = 0.172; 
                 case 'Zigbee_HighPower'
                     network.communicationRatebps     = 256e3;
                     network.communicationRangeMeters = 90;
+                    network.costPerUnit              = 32.0;
+                    network.powerDrawPerUnit_mA      = 0.234;
             end
         end
         

@@ -8,7 +8,7 @@ clc;
 plotGeometry            = 1;
 plotSensorEstimates     = 0;
 plotNetworkPacketDelays = 0;
-plotFusion              = 1;
+plotFusion              = 0;
 plotTrueState           = 0;
 plotEstimates           = 1;
 
@@ -33,9 +33,7 @@ sensors = [Sensor('Raspberry_Pi_Camera', [30;50],  235*pi/180, 2); ...
 %            Sensor('Delphi_Mid_ESR', [20;200], 245*pi/180, 2); ...
 %            Sensor('Delphi_Mid_ESR', [20;235], 245*pi/180, 2)];
        
-
-       
-network = Network('WiFi');
+network = Network('LoRa');
 fusion  = FusionCenter();  
 accel   = vehicleMotion( 'cruise', dt, tend );          
 
@@ -100,11 +98,11 @@ for k=1:length(t)
    end
 end
 
+metricEstimate = CostPerformanceEstimate(x, x_hist, sensors, network);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Telemetry stuff
-
 
 if plotTrueState
    figure;

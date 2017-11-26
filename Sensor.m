@@ -17,14 +17,17 @@ classdef Sensor
         lastObservationTime = -10.0;  
         vertices = [];
         pxRange  = 100;
+        cost     = 0;
         
         %Data packet definition
         P_sizeBits           = 0;
         z_sizeBits           = 0;
-        id_sizeBits          = 32;
         tgtClass_sizeBits    = 8;
         obsTime_sizeBits     = 32;
-        maxNumObjectsTracked = 60;
+        maxNumObjectsTracked = 30;
+        posVar_sizeBits      = 64;
+        pos_sizeBits         = 64;
+        id_sizeBits          = 32;
         
         z_truth_hist = [];
         z_est_hist = [];
@@ -44,22 +47,24 @@ classdef Sensor
                 case 'Delphi_Mid_ESR'
                     sensor.P_sizeBits = 32*3*3;
                     sensor.z_sizeBits = 32*3;
-                    sensor.H   = [1;0;1;1];
-                    sensor.max = [45*pi/180; 0; 60; 9999];
-                    sensor.R   = [0.5*pi/180 0 0 0; 
+                    sensor.H    = [1;0;1;1];
+                    sensor.max  = [45*pi/180; 0; 60; 9999];
+                    sensor.R    = [0.5*pi/180 0 0 0; 
                                   0 0 0 0; 
                                   0 0 0.25 0;
                                   0 0 0 0.12];
-                    sensor.dt  = 50e-3;
+                    sensor.dt   = 50e-3;
+                    sensor.cost = 3600.0; 
                 case 'Velodyne_VLP16'
                     sensor.P_sizeBits = 32*2*2;
                     sensor.z_sizeBits = 32*2;
-                    sensor.H   = [1;0;1;0];
-                    sensor.max = [180*pi/180; 0; 100; 0];
-                    sensor.R   = [0.05 0 0 0; ...
-                                  0 0 0 0; ...
-                                  0 0 0.03 0; ...
-                                  0 0 0 0];
+                    sensor.H    = [1;0;1;0];
+                    sensor.max  = [180*pi/180; 0; 100; 0];
+                    sensor.R    = [0.05 0 0 0; ...
+                                   0 0 0 0; ...
+                                   0 0 0.03 0; ...
+                                   0 0 0 0];
+                    sensor.cost = 8000.0; 
                     %sensor.dt  = ???
                 case 'R20A'
                     sensor.P_sizeBits = 32*2*2;

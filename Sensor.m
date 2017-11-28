@@ -46,7 +46,7 @@ classdef Sensor
             minDetWidthPixels = 5;
             switch modelName
                 case 'Delphi_Mid_ESR'
-                    sensor.P_sizeBits = 32*3*3;
+                    sensor.P_sizeBits = 32*3;
                     sensor.z_sizeBits = 32*3;
                     sensor.H    = [1;0;1;1];
                     sensor.max  = [90*pi/180; 0; 60; 9999];
@@ -58,7 +58,7 @@ classdef Sensor
                     sensor.costPerUnit = 2500.0; 
                     sensor.powerDrawPerUnit_W = 18; 
                 case 'Delphi_Long_ESR'
-                    sensor.P_sizeBits = 32*3*3;
+                    sensor.P_sizeBits = 32*3;
                     sensor.z_sizeBits = 32*3;
                     sensor.H    = [1;0;1;1];
                     sensor.max  = [20*pi/180; 0; 174; 9999];
@@ -70,7 +70,7 @@ classdef Sensor
                     sensor.costPerUnit = 2500.0; 
                     sensor.powerDrawPerUnit_W = 18;
                 case 'Velodyne_VLP16'
-                    sensor.P_sizeBits = 32*2*2;
+                    sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;
                     sensor.H    = [1;0;1;0];
                     sensor.max  = [180*pi/180; 0; 100; 0];
@@ -81,7 +81,7 @@ classdef Sensor
                     sensor.costPerUnit = 8000.0; 
                     sensor.powerDrawPerUnit_W = 8;
                 case 'Arducam_OV7670'
-                    sensor.P_sizeBits = 32*2*2;
+                    sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;
                     sensor.H    = [1;1;0;0];
                     FOV         = 25.0*pi/180;
@@ -96,7 +96,7 @@ classdef Sensor
                     sensor.costPerUnit = 14.0;
                     sensor.powerDrawPerUnit_W = 1.3;
                 case 'Arducam_OV5647'
-                    sensor.P_sizeBits = 32*2*2;
+                    sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;
                     sensor.H    = [1;1;0;0];
                     FOV         = 54.0*pi/180;
@@ -111,7 +111,7 @@ classdef Sensor
                     sensor.costPerUnit = 15.0;      
                     sensor.powerDrawPerUnit_W = 1.3;
                 case 'Raspberry_Pi_Camera_1080p30'
-                    sensor.P_sizeBits = 32*2*2;
+                    sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;
                     sensor.H    = [1;1;0;0];
                     FOV         = 62.0*pi/180;
@@ -126,7 +126,7 @@ classdef Sensor
                     sensor.costPerUnit = 25.0;
                     sensor.powerDrawPerUnit_W = 1.3;
                 case 'Raspberry_Pi_Camera_720p60'
-                    sensor.P_sizeBits = 32*2*2;
+                    sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;
                     sensor.H    = [1;1;0;0];
                     FOV         = 62.0*pi/180;
@@ -141,7 +141,7 @@ classdef Sensor
                     sensor.costPerUnit = 25.0;
                     sensor.powerDrawPerUnit_W = 1.3;
                 case 'Pi_12mmM12'
-                    sensor.P_sizeBits = 32*2*2;
+                    sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;
                     sensor.H    = [1;1;0;0];
                     FOV         = 28.0*pi/180;

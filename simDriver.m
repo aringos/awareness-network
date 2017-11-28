@@ -18,15 +18,39 @@ tend = 65.0; %A block in midtown Tucson is about 600m long
 t = 0:dt:tend;
 randomSeed = 0;
 
-sensors = [Sensor('Raspberry_Pi_Camera_1080p30', [30;100],  235*pi/180); ...
-           Sensor('Raspberry_Pi_Camera_1080p30', [-30;190], -55*pi/180);
-           Sensor('Raspberry_Pi_Camera_1080p30', [30;280],  235*pi/180);
-           Sensor('Raspberry_Pi_Camera_1080p30', [-30;370], -55*pi/180);
-           Sensor('Raspberry_Pi_Camera_1080p30', [30;460],  235*pi/180);
-           Sensor('Raspberry_Pi_Camera_1080p30', [-30;550], -55*pi/180);
-           Sensor('Raspberry_Pi_Camera_1080p30', [30;640],  235*pi/180);
-           Sensor('Raspberry_Pi_Camera_1080p30', [-30;730], -55*pi/180)];
-       
+% sensors = [Sensor('Raspberry_Pi_Camera_1080p30', [30;100],  235*pi/180); 
+%            Sensor('Raspberry_Pi_Camera_1080p30', [-30;190], -55*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;280],  235*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [-30;370], -55*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;460],  235*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [-30;550], -55*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;640],  235*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [-30;730], -55*pi/180)];
+% network = Network('LoRa_RN2483A');
+
+% sensors = [Sensor('Raspberry_Pi_Camera_1080p30', [30;90],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;130],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;170],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;210],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;250],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;290],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;330],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;370],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;410],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;450],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;490],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;530],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;560],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;600],  240*pi/180);
+%            Sensor('Raspberry_Pi_Camera_1080p30', [30;640],  240*pi/180);];
+% network = Network('WiFi_Onboard');
+
+% sensors = [Sensor('Pi_12mmM12', [-30;200], 280*pi/180); 
+%            Sensor('Pi_12mmM12', [30;350],  -100*pi/180);
+%            Sensor('Pi_12mmM12', [-30;500], 280*pi/180);
+%            Sensor('Pi_12mmM12', [30;650], -100*pi/180);
+%            Sensor('Pi_12mmM12', [-30;800], 280*pi/180)];
+
 % sensors = [Sensor('Delphi_Long_ESR', [20;170], 257*pi/180); ...
 %            Sensor('Delphi_Long_ESR', [20;265], 257*pi/180); ...
 %            Sensor('Delphi_Long_ESR', [20;360], 257*pi/180); ...
@@ -34,7 +58,6 @@ sensors = [Sensor('Raspberry_Pi_Camera_1080p30', [30;100],  235*pi/180); ...
 %            Sensor('Delphi_Long_ESR', [20;550], 257*pi/180); ...
 %            Sensor('Delphi_Long_ESR', [20;645], 257*pi/180)];
        
-network = Network('LoRa_RN2483A');
 hardware = Hardware('Pi_3');
 fusion  = FusionCenter();  
 

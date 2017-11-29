@@ -79,7 +79,7 @@ classdef FusionCenter
         
         function ekf = measUpdate(ekf, z, R, t, sensorPos, type)
            [H, x_pred, z_pred] = ekf.getPredictionsForSensor(sensorPos);
-           R           = diag(R);
+           %R           = diag(R);
            dt          = t-ekf.t;
            ekf         = ekf.setProcessNoise(dt, type);
            phi         = ekf.getPhi(dt);

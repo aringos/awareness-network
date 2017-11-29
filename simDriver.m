@@ -31,14 +31,23 @@ randomSeed = 0;
 %             Sensor('Raspberry_Pi_Camera_1080p30', [20;650],  240*pi/180)];
 %  network = Network('LoRa_RN2483A');
 
-sensors = [Sensor('Pi_12mmM12', [-20;200], 285*pi/180); 
-           Sensor('Pi_12mmM12', [20;300],  -105*pi/180);
-           Sensor('Pi_12mmM12', [-20;400], 285*pi/180);
-           Sensor('Pi_12mmM12', [20;500], -105*pi/180);
-           Sensor('Pi_12mmM12', [-20;600], 285*pi/180);
-           Sensor('Pi_12mmM12', [20;700], -105*pi/180)];
+% sensors = [Sensor('Pi_12mmM12', [-20;275], 277*pi/180); 
+%            Sensor('Pi_12mmM12', [20;375],  -97*pi/180);
+%            Sensor('Pi_12mmM12', [-20;475], 277*pi/180);
+%            Sensor('Pi_12mmM12', [20;575], -97*pi/180);
+%            Sensor('Pi_12mmM12', [-20;675], 277*pi/180)];
+% network = Network('LoRa_RN2483A');
+
+sensors = [Sensor('Pi_6mmM12', [-20;100], 290*pi/180); 
+           Sensor('Pi_6mmM12', [20;180],  -110*pi/180);
+           Sensor('Pi_6mmM12', [-20;260], 290*pi/180);
+           Sensor('Pi_6mmM12', [20;340], -110*pi/180);
+           Sensor('Pi_6mmM12', [-20;420], 290*pi/180);
+           Sensor('Pi_6mmM12', [20;500], -110*pi/180);
+           Sensor('Pi_6mmM12', [-20;580], 290*pi/180);
+           Sensor('Pi_6mmM12', [20;660], -110*pi/180)];
 network = Network('LoRa_RN2483A');
-       
+
 % sensors = [Sensor('Delphi_Long_ESR', [20;170], 257*pi/180); ...
 %            Sensor('Delphi_Long_ESR', [20;265], 257*pi/180); ...
 %            Sensor('Delphi_Long_ESR', [20;360], 257*pi/180); ...

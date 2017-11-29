@@ -144,7 +144,22 @@ classdef Sensor
                     sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;
                     sensor.H    = [1;1;0;0];
-                    FOV         = 28.0*pi/180;
+                    FOV         = 21.0*pi/180;
+                    iFOV        = FOV/1920.0;
+                    sensor.R    = [iFOV  0    0 0; ...
+                                  0      iFOV 0 0; ...
+                                  0      0    0 0; ... 
+                                  0      0    0 0];
+                    sensor.dt   = 1.0/30.0;
+                    pxRange     = 1.2/(2*minDetWidthPixels*tan(1.5*iFOV));
+                    sensor.max  = [FOV; 1e9; pxRange; 0];
+                    sensor.costPerUnit = 25.0+10.0+10.0;  
+                    sensor.powerDrawPerUnit_W = 1.3;
+                case 'Pi_6mmM12'
+                    sensor.P_sizeBits = 32*2;
+                    sensor.z_sizeBits = 32*2;
+                    sensor.H    = [1;1;0;0];
+                    FOV         = 41.0*pi/180;
                     iFOV        = FOV/1920.0;
                     sensor.R    = [iFOV  0    0 0; ...
                                   0      iFOV 0 0; ...

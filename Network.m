@@ -19,7 +19,12 @@ classdef Network
                     network.communicationRatebps     = 1e6;
                     network.communicationRangeMeters = 50;
                     network.costPerUnit              = 0.0;
-                    network.powerDrawPerUnit_W       = 1.5; 
+                    network.powerDrawPerUnit_W       = 1.5;
+                case 'WiFi_ROHM'
+                    network.communicationRatebps     = 72e6;
+                    network.communicationRangeMeters = 50;
+                    network.costPerUnit              = 70.0;
+                    network.powerDrawPerUnit_W       = 1.77;
                 case 'LoRa_RN2483A'
                     network.communicationRatebps     = 300e3;
                     network.communicationRangeMeters = 5000;

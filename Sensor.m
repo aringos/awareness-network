@@ -1,7 +1,7 @@
 classdef Sensor
     
     properties
-        nPixelsForDetection = 3;
+        nPixelsForDetection = 5;
         H        = zeros(4,1);
         max      = zeros(4,1);
         R        = -1*ones(4);
@@ -80,7 +80,7 @@ classdef Sensor
                                   0      0    0 0; ... 
                                   0      0    0 0];
                     sensor.dt   = 1.0/30.0;
-                    pxRange     = 1.2/(2*minDetWidthPixels*tan(1.5*iFOV));
+                    pxRange     = 0.6/(2*tan(minDetWidthPixels/2*iFOV));
                     sensor.max  = [FOV; 1e9; pxRange; 0];
                     sensor.costPerUnit = 14.0;
                     sensor.powerDrawPerUnit_W = 1.3;
@@ -95,7 +95,7 @@ classdef Sensor
                                   0      0    0 0; ... 
                                   0      0    0 0];
                     sensor.dt   = 1.0/30.0;
-                    pxRange     = 1.2/(2*minDetWidthPixels*tan(1.5*iFOV));
+                    pxRange     = 0.6/(2*tan(minDetWidthPixels/2*iFOV));
                     sensor.max  = [FOV; 1e9; pxRange; 0];
                     sensor.costPerUnit = 15.0;      
                     sensor.powerDrawPerUnit_W = 1.3;
@@ -110,7 +110,7 @@ classdef Sensor
                                   0      0    0 0; ... 
                                   0      0    0 0];
                     sensor.dt   = 1.0/30.0;
-                    pxRange     = 1.2/(2*minDetWidthPixels*tan(1.5*iFOV));
+                    pxRange     = 0.6/(2*tan(minDetWidthPixels/2*iFOV));
                     sensor.max  = [FOV; 1e9; pxRange; 0];
                     sensor.costPerUnit = 25.0;
                     sensor.powerDrawPerUnit_W = 1.3;
@@ -125,7 +125,7 @@ classdef Sensor
                                   0      0      0 0; ... 
                                   0      0      0 0];
                     sensor.dt   = 1.0/30.0; %Actual 1/60, SP limited (better thetadot though)
-                    pxRange     = 1.2/(2*minDetWidthPixels*tan(1.5*iFOV));
+                    pxRange     = 0.6/(2*tan(minDetWidthPixels/2*iFOV));
                     sensor.max  = [FOV; 1e9; pxRange; 0];
                     sensor.costPerUnit = 25.0;
                     sensor.powerDrawPerUnit_W = 1.3;
@@ -140,7 +140,7 @@ classdef Sensor
                                   0      0    0 0; ... 
                                   0      0    0 0];
                     sensor.dt   = 1.0/30.0;
-                    pxRange     = 1.2/(2*minDetWidthPixels*tan(1.5*iFOV));
+                    pxRange     = 0.6/(2*tan(minDetWidthPixels/2*iFOV));
                     sensor.max  = [FOV; 1e9; pxRange; 0];
                     sensor.costPerUnit = 25.0+10.0+10.0;  
                     sensor.powerDrawPerUnit_W = 1.3;
@@ -155,7 +155,7 @@ classdef Sensor
                                   0      0    0 0; ... 
                                   0      0    0 0];
                     sensor.dt   = 1.0/30.0;
-                    pxRange     = 1.2/(2*minDetWidthPixels*tan(1.5*iFOV));
+                    pxRange     = 0.6/(2*tan(minDetWidthPixels/2*iFOV));
                     sensor.max  = [FOV; 1e9; pxRange; 0];
                     sensor.costPerUnit = 25.0+10.0+10.0;  
                     sensor.powerDrawPerUnit_W = 1.3;

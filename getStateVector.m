@@ -1,8 +1,7 @@
-function [ x ] = getStateVector( accelVector, dt )
+function [ x ] = getStateVector( accelVector, d0, v0, dt )
 
-mph2mps = unitsratio('m','mi')/3600;
 x = zeros(6, size(accelVector,2));
-x(:,1) = [0;0;0;20*mph2mps;accelVector(:,1)];
+x(:,1) = [d0;v0;accelVector(:,1)];
 x(5:6,:) = accelVector;
 for i=2:size(accelVector,2)
    x(:,i) = dynamics(x(:,i-1),dt);

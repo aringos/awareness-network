@@ -69,17 +69,6 @@ classdef Sensor
                     sensor.dt   = 50e-3;
                     sensor.costPerUnit = 2500.0; 
                     sensor.powerDrawPerUnit_W = 18;
-                case 'Velodyne_VLP16'
-                    sensor.P_sizeBits = 32*2;
-                    sensor.z_sizeBits = 32*2;
-                    sensor.H    = [1;0;1;0];
-                    sensor.max  = [180*pi/180; 0; 100; 0];
-                    sensor.R    = [0.05 0 0 0; ...
-                                   0 0 0 0; ...
-                                   0 0 0.03 0; ...
-                                   0 0 0 0];
-                    sensor.costPerUnit = 8000.0; 
-                    sensor.powerDrawPerUnit_W = 8;
                 case 'Arducam_OV7670'
                     sensor.P_sizeBits = 32*2;
                     sensor.z_sizeBits = 32*2;

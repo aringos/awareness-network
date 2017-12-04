@@ -130,10 +130,10 @@ for scn = 1:numScn
     metricEstimate = CostPerformanceEstimate(x, x_hist, sensors, network, hardware);
 
     % Store scenario output
-    scnData.metricEstimate{scn} = metricEstimate;
-    scnData.x_hist{scn} = x_hist;
-    scnData.P_hist{scn} = P_hist;
-    scnData.x{scn} = x;
+    scnData(scn).metricEstimate = metricEstimate;
+    scnData(scn).x_hist = x_hist;
+    scnData(scn).P_hist = P_hist;
+    scnData(scn).x = x;
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

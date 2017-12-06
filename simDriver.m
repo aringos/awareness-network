@@ -29,19 +29,25 @@ addpath('scenarios');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Driver Setup
 
-plotGeometry            = 0;
+plotGeometry            = 1;
 plotSensorEstimates     = 0;
 plotNetworkPacketDelays = 0;
 plotFusion              = 0;
 plotTrueState           = 0;
 plotEstimateResiduals   = 0;
 plotEstimates           = 0;
+plotMetrics             = 1;
 
 dt         = 0.001;
 tend       = 51.5; %A major block in midtown Tucson is about 600-800m long
                    %tend = 800m/15.6mps
-randomSeeds = 1:2;  
 
+%WARNING: Repeatability issues at present. Taking results from seed 1.
+randomSeeds = 1;  
+
+% Metric plot labels. Should add these to the sensor models.
+sensorUnitNames = {'Raspberry Pi 1080p','Raspberry Pi 720p',...
+                       'Arducam OV7670','Arducam OV5647'};
 scenarioSet = ...
     { scn_RaspPi1080p_LoRa(dt,tend),...
       scn_RaspPi720p_LoRa(dt,tend),...
@@ -211,4 +217,73 @@ for scn = 1:numScn
            metricEstimate.plotResiduals(t); 
         end
     end
+end
+
+% Plot metrics from all runs
+if plotMetrics
+    
+    zeroVec  = zeros(numScn,1);
+    costs    = zeroVec;
+    power    = zeroVec;
+    posBiases= zeroVec;
+    posSig   = zeroVec;
+    velBiases= zeroVec;
+    velSig   = zeroVec;
+    for scn = 1:numScn
+       costs(scn)    = scnData(scn,1).metricEstimate.costPerMile;
+       power(scn)    = scnData(scn,1).metricEstimate.wattsPerMile;
+       posBiases(scn)= max(scnData(scn,1).metricEstimate.x_errorMean([1,3]));
+       posSig(scn)   = max(scnData(scn,1).metricEstimate.x_errorStdev([1,3]));
+       velBiases(scn)= max(scnData(scn,1).metricEstimate.x_errorMean([2,4]));
+       velSig(scn)   = max(scnData(scn,1).metricEstimate.x_errorStdev([2,4]));
+    end
+    
+    figure;
+    bar(costs); box on; grid on;
+    title('Cost Density ($/mile)','fontweight','bold','fontsize',26);
+    set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
+    figure;
+    bar(power); box on; grid on;
+    title('Power Density (W/mile)','fontweight','bold','fontsize',26);
+    set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
+    figure;
+    bar(posBiases); box on; grid on;
+    title('Mean Position Bias (m)','fontweight','bold','fontsize',26);
+    set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
+    figure;
+    bar(posSig); box on; grid on;
+    title('Position Uncertainty, 1-\sigma (m)','fontweight','bold','fontsize',26);
+    set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
+    figure;
+    bar(velBiases); box on; grid on;
+    title('Mean Velocity Bias (m/s)','fontweight','bold','fontsize',26);
+    set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
+    figure;
+    bar(velSig); box on; grid on;
+    title('Velocity Uncertainty, 1-\sigma (m/s)','fontweight','bold','fontsize',26);
+    set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
+    
+    figure;
+    onesVec = ones(numScn,1);
+    costFigure = min(costs)./costs;
+    powerFigure = min(power)./power;
+    posBiasFigure = min(posBiases)./posBiases;
+    posSigFigure = min(posSig)./posSig;
+    bar([costFigure';powerFigure';posBiasFigure';posSigFigure']);
+    box on; grid on;
+    set(gca,'xticklabel',{'Cost Density','Power Density',...
+        'Mean Position Bias','Position Uncertainty'});
+    set(gca,'fontsize',24);
+    title('Normalized Figures of Merit','fontweight','bold','fontsize',26);
+    legend(sensorUnitNames);
+    
+    figure;
+    costRss = sqrt(costFigure.^2+powerFigure.^2);
+    perfRss = sqrt(posBiasFigure.^2+posSigFigure.^2);
+    scatter(costRss,perfRss,'linewidth',2,'sizedata',16^2);
+    box on; grid on;
+    title('Cost vs. Performance Pareto','fontweight','bold','fontsize',26);
+    set(gca,'fontsize',24);
+    xlabel('Cost Score','fontsize',24); ylabel('Performance Score','fontsize',24);
+    
 end

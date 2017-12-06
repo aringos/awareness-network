@@ -68,6 +68,7 @@ classdef CostPerformanceEstimate
         function est = calcNetworkDistance(est, sensors, network)
             minDist = min(est.adjacencies(find(est.adjacencies~=0)));
             packetSize = SensorDataPacket(sensors(1), 1.0).totalDataSizeBits;
+            fprintf('-------------------------------------------------\n');
             disp(sprintf('Assuming average hop of %d meters', minDist));
             disp(sprintf('Sensor updates every %f sec', sensors(1).dt));
             disp(sprintf('Sensor data packet size %d bits', packetSize));

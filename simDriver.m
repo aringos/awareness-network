@@ -280,10 +280,11 @@ if plotMetrics
     figure;
     costRss = sqrt(costFigure.^2+powerFigure.^2);
     perfRss = sqrt(posBiasFigure.^2+posSigFigure.^2);
-    scatter(costRss,perfRss,'linewidth',2,'sizedata',16^2);
+    scatter(costRss,perfRss,16^2,linspace(1,10,numScn),'filled');
     box on; grid on;
+    text(costRss+ones(numScn,1)*0.02,perfRss,sensorUnitNames,'fontsize',16);
     title('Cost vs. Performance Pareto','fontweight','bold','fontsize',26);
     set(gca,'fontsize',24);
     xlabel('Cost Score','fontsize',24); ylabel('Performance Score','fontsize',24);
-    
+
 end

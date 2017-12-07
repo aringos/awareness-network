@@ -46,15 +46,12 @@ tend       = 51.5; %A major block in midtown Tucson is about 600-800m long
 randomSeeds = 1;  
 
 % Metric plot labels. Should add these to the sensor models.
-sensorUnitNames = {'Raspberry Pi 1080p','Raspberry Pi 720p',...
+sensorUnitNames = {'Raspberry Pi 1080p',...%'Raspberry Pi 720p',...
                        'Arducam OV7670','Arducam OV5647'};
 scenarioSet = ...
     { scn_RaspPi1080p_LoRa(dt,tend),...
-      scn_RaspPi720p_LoRa(dt,tend),...
       scn_OV7670_LoRa(dt,tend),...
       scn_OV5647_LoRa(dt,tend)...
-      %scn_DelphiLR_LoRa(dt,tend),...
-      %scn_DelphiMR_LoRa(dt,tend)
       };
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -225,6 +222,7 @@ if plotMetrics
     zeroVec  = zeros(numScn,1);
     costs    = zeroVec;
     power    = zeroVec;
+    visRanges= zeroVec;
     posBiases= zeroVec;
     posSig   = zeroVec;
     velBiases= zeroVec;
@@ -232,6 +230,7 @@ if plotMetrics
     for scn = 1:numScn
        costs(scn)    = scnData(scn,1).metricEstimate.costPerMile;
        power(scn)    = scnData(scn,1).metricEstimate.wattsPerMile;
+       visRanges(scn)= scnData(scn,1).metricEstimate.networkDistMeters;
        posBiases(scn)= max(scnData(scn,1).metricEstimate.x_errorMean([1,3]));
        posSig(scn)   = max(scnData(scn,1).metricEstimate.x_errorStdev([1,3]));
        velBiases(scn)= max(scnData(scn,1).metricEstimate.x_errorMean([2,4]));
@@ -245,6 +244,10 @@ if plotMetrics
     figure;
     bar(power); box on; grid on;
     title('Power Density (W/mile)','fontweight','bold','fontsize',26);
+    set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
+    figure;
+    bar(visRanges); box on; grid on;
+    title('Network Visibility Range (m)','fontweight','bold','fontsize',26);
     set(gca,'xticklabel',sensorUnitNames,'fontsize',24);
     figure;
     bar(posBiases); box on; grid on;
@@ -267,20 +270,23 @@ if plotMetrics
     onesVec = ones(numScn,1);
     costFigure = min(costs)./costs;
     powerFigure = min(power)./power;
+    rangeFigure = visRanges./max(visRanges);
     posBiasFigure = min(posBiases)./posBiases;
     posSigFigure = min(posSig)./posSig;
-    bar([costFigure';powerFigure';posBiasFigure';posSigFigure']);
+    bar([costFigure';powerFigure';rangeFigure';posBiasFigure';posSigFigure']);
     box on; grid on;
-    set(gca,'xticklabel',{'Cost Density','Power Density',...
-        'Mean Position Bias','Position Uncertainty'});
+    set(gca,'xticklabel',{'Cost Density','Power Density','Network Vis.',...
+        'Mean Pos. Bias','Pos. Uncert.'});
     set(gca,'fontsize',24);
     title('Normalized Figures of Merit','fontweight','bold','fontsize',26);
     legend(sensorUnitNames);
     
     figure;
     costRss = sqrt(costFigure.^2+powerFigure.^2);
-    perfRss = sqrt(posBiasFigure.^2+posSigFigure.^2);
-    scatter(costRss,perfRss,16^2,linspace(1,10,numScn),'filled');
+    costRss = (costRss-ones(numScn,1)*min(costRss))./(max(costRss)-min(costRss));
+    perfRss = sqrt(posBiasFigure.^2+posSigFigure.^2+rangeFigure.^2);
+    perfRss = (perfRss-ones(numScn,1)*min(perfRss))./(max(perfRss)-min(perfRss));
+    scatter(costRss,perfRss,16^2,linspace(0,1,numScn),'filled');
     box on; grid on;
     text(costRss+ones(numScn,1)*0.02,perfRss,sensorUnitNames,'fontsize',16);
     title('Cost vs. Performance Pareto','fontweight','bold','fontsize',26);
